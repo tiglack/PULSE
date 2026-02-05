@@ -2,168 +2,195 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
+  <title>PULSE — Operator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PULSE</title>
 
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f1115;
+      color: #fff;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    /* LOGIN */
+    #login {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .login-box {
+      background: #1c1f26;
+      padding: 30px;
+      border-radius: 12px;
+      width: 320px;
+    }
+
+    .login-box h2 {
+      margin-bottom: 15px;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: none;
+      background: #0f1115;
+      color: #fff;
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: #d4af37;
+      font-weight: bold;
+    }
+
+    /* APP */
+    #app {
+      display: none;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .actions button {
+      margin-left: 10px;
+      padding: 10px 16px;
+      border-radius: 20px;
+      border: 1px solid #d4af37;
+      background: transparent;
+      color: #d4af37;
+    }
+
+    .timers {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #1c1f26;
+      padding: 20px;
+      border-radius: 12px;
+      width: 180px;
+      text-align: center;
+    }
+
+    .card span {
+      display: block;
+      margin-top: 10px;
+      font-size: 22px;
+    }
+
+    .projects {
+      display: flex;
+      gap: 20px;
+    }
+
+    .project {
+      background: #1c1f26;
+      padding: 20px;
+      border-radius: 12px;
+      width: 200px;
+    }
+
+    .project button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      background: #333;
+      color: #fff;
+    }
+  </style>
 </head>
 <body>
 
-<!-- LOGIN MODAL -->
-<div class="modal active" id="login-modal">
-  <div class="card">
-    <h3>👤 Вход оператора</h3>
-
-    <div class="field">
-      <label>Имя оператора</label>
-      <input id="login-name" type="text" placeholder="Введите имя">
-    </div>
-
-    <button id="login-btn" class="btn-accent">Войти</button>
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-box">
+    <h2>👤 Вход оператора</h2>
+    <input id="nameInput" placeholder="Имя оператора">
+    <button id="loginBtn">Войти</button>
   </div>
 </div>
 
 <!-- APP -->
-<div id="app" style="display:none;">
-
-  <!-- HEADER -->
-  <header class="header">
-    <div class="header-left">
-      <div class="logo-container">
-        <div class="logo-img">⏱️</div>
-        <h1>PULSE</h1>
-      </div>
-    </div>
-
-    <div class="header-right">
-      <div class="status-indicator"></div>
-      <div class="operator-info">
-        Оператор: <strong id="operator-name">—</strong>
-      </div>
-
-      <button id="start-shift" class="btn-shift">Начать смену</button>
-      <button id="end-shift" class="btn-shift">Завершить смену</button>
-      <button id="pause-shift-btn" class="btn-shift">⏸ Пауза</button>
-      <button id="channel-toggle-button" class="btn-channel">Call Back</button>
+<div id="app">
+  <header>
+    <div>PULSE | Оператор: <b id="operatorName"></b></div>
+    <div class="actions">
+      <button id="startShift">Начать смену</button>
+      <button id="endShift">Завершить смену</button>
+      <button id="pauseShift">Пауза</button>
     </div>
   </header>
 
-  <!-- MAIN -->
-  <main class="container">
-
-    <!-- TIMERS -->
-    <section class="timers">
-      <div class="timer-card">
-        <span>Смена</span>
-        <span id="shift-timer" class="timer-value">00:00:00</span>
-      </div>
-
-      <div class="timer-card">
-        <span>Звонок</span>
-        <span id="call-timer" class="timer-value">00:00:00</span>
-      </div>
-
-      <div class="timer-card">
-        <span>Пауза</span>
-        <span id="pause-total-timer" class="timer-value">00:00:00</span>
-      </div>
-
-      <div class="timer-card">
-        <span>Звонков</span>
-        <span id="total-calls" class="timer-value">0</span>
-      </div>
-    </section>
-
-    <!-- TOP + NOTES -->
-    <section class="cards-grid">
-
-      <div class="card">
-        <h3>🏆 TOP-3 операторов</h3>
-        <div id="top3-list"></div>
-      </div>
-
-      <div class="card">
-        <div class="notes-header">
-          <span>📝 Личные заметки</span>
-          <span id="notes-status" class="notes-status">—</span>
-        </div>
-
-        <textarea
-          id="personal-notes"
-          placeholder="Заметки сохраняются автоматически…"
-        ></textarea>
-      </div>
-
-    </section>
-
-    <!-- PROJECTS -->
-    <section class="projects-section">
-      <div class="card">
-
-        <div class="projects-header">
-          <h2>Проекты</h2>
-          <span id="project-count">Проектов: 0</span>
-        </div>
-
-        <div class="projects-grid" id="projects-container"></div>
-
-      </div>
-    </section>
-
-  </main>
-</div>
-
-<!-- PAUSE MODAL -->
-<div class="modal" id="pause-modal">
-  <div class="card">
-    <h2>⏸ ПЕРЕРЫВ</h2>
-    <div id="pause-timer">00:00</div>
-    <button id="end-pause-btn" class="btn-accent">Завершить</button>
+  <div class="timers">
+    <div class="card">
+      Смена
+      <span id="shiftTimer">00:00:00</span>
+    </div>
+    <div class="card">
+      Звонок
+      <span id="callTimer">00:00:00</span>
+    </div>
+    <div class="card">
+      Звонков
+      <span id="callCount">0</span>
+    </div>
   </div>
-</div>
 
-<!-- REPORT MODAL -->
-<div class="modal" id="report-modal">
-  <div class="card">
-    <h2>🧾 Отчёт</h2>
-    <div id="report-body"></div>
+  <h2>Проекты</h2>
+  <div class="projects">
+    <div class="project">
+      <b>Проект 1</b>
+      <div>Звонков: <span>0</span></div>
+      <button>Начать звонок</button>
+    </div>
 
-    <div class="modal-actions">
-      <button id="export-pdf" class="btn-shift">PDF</button>
-      <button id="export-csv" class="btn-shift">CSV</button>
-      <button id="close-report" class="btn-shift">Закрыть</button>
+    <div class="project">
+      <b>Проект 2</b>
+      <div>Звонков: <span>0</span></div>
+      <button>Начать звонок</button>
     </div>
   </div>
 </div>
 
-<!-- FIREBASE -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, set, update, onValue, get }
-from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+<script>
+  const login = document.getElementById('login');
+  const app = document.getElementById('app');
+  const loginBtn = document.getElementById('loginBtn');
+  const nameInput = document.getElementById('nameInput');
+  const operatorName = document.getElementById('operatorName');
 
-const firebaseConfig = {
-  apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
-  authDomain: "pulse-ae670.firebaseapp.com",
-  databaseURL: "https://pulse-ae670-default-rtdb.firebaseio.com",
-  projectId: "pulse-ae670",
-  storageBucket: "pulse-ae670.firebasestorage.app",
-  messagingSenderId: "353326683454",
-  appId: "1:353326683454:web:34ed86590e53cf60a2c86f"
-};
+  loginBtn.onclick = () => {
+    if (!nameInput.value.trim()) return;
+    operatorName.textContent = nameInput.value;
+    login.style.display = 'none';
+    app.style.display = 'block';
+  };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-window.db = db;
-window.ref = ref;
-window.set = set;
-window.update = update;
-window.onValue = onValue;
-window.get = get;
+  document.getElementById('startShift').onclick = () => alert('Смена начата');
+  document.getElementById('endShift').onclick = () => alert('Смена завершена');
+  document.getElementById('pauseShift').onclick = () => alert('Пауза');
 </script>
 
-<script src="script.js"></script>
 </body>
 </html>

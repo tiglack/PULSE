@@ -1,75 +1,18 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
-  <title>PULSE Admin</title>
+  <title>Admin / Supervisor Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <style>
     body {
-      margin: 0;
       background:#0f1115;
       color:#fff;
-      font-family: Arial, sans-serif;
+      font-family:Arial,sans-serif;
+      padding:20px;
     }
-
-    .admin-layout {
-      display: flex;
-      height: 100vh;
-    }
-
-    .sidebar {
-      width: 240px;
-      background: #0c0e12;
-      padding: 20px;
-      border-right: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .sidebar h2 {
-      color: #d4af37;
-      margin-bottom: 20px;
-    }
-
-    .sidebar button {
-      width: 100%;
-      background: transparent;
-      border: none;
-      color: #ccc;
-      text-align: left;
-      padding: 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-bottom: 8px;
-    }
-
-    .sidebar button:hover {
-      background: rgba(212,175,55,0.1);
-      color: #d4af37;
-    }
-
-    .content {
-      flex: 1;
-      padding: 30px;
-      overflow-y: auto;
-    }
-
-    .page {
-      display: none;
-    }
-
-    .page.active {
-      display: block;
-    }
-
-    .box {
-      background:#1c1f26;
-      padding:15px;
-      border-radius:10px;
-      max-width:400px;
-    }
-
-    input, select, button.action {
+    h1,h2 { margin-bottom:10px; }
+    input,select,button {
       width:100%;
       padding:10px;
       margin:6px 0;
@@ -78,7 +21,14 @@
       background:#1c1f26;
       color:#fff;
     }
-
+    button { cursor:pointer; }
+    .box {
+      background:#1c1f26;
+      padding:15px;
+      border-radius:10px;
+      margin-bottom:20px;
+      max-width:400px;
+    }
     .ok { color:#2ecc71; }
     .err { color:#e74c3c; }
   </style>
@@ -86,83 +36,34 @@
 
 <body>
 
-<div class="admin-layout">
+<h1>👑 Админ панель</h1>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <h2>PULSE</h2>
-    <button data-page="dashboard">📊 Dashboard</button>
-    <button data-page="operators">👥 Operators</button>
-    <button data-page="users">👤 Users</button>
-  </aside>
+<div id="access-box" class="box">
+  <h2>🔐 Введите код</h2>
+  <input id="admin-code" type="password" placeholder="Код доступа">
+  <button id="check-code">Войти</button>
+  <div id="access-status"></div>
+</div>
 
-  <!-- CONTENT -->
-  <main class="content">
+<div id="admin-panel" class="box" style="display:none;">
+  <h2>➕ Создать пользователя</h2>
 
-    <!-- DASHBOARD -->
-    <section id="dashboard" class="page active">
-      <h1>Dashboard</h1>
-      <p id="stats">Загрузка...</p>
-    </section>
+  <input id="new-login" placeholder="Логин">
+  <input id="new-password" placeholder="Пароль">
 
-    <!-- OPERATORS -->
-    <section id="operators" class="page">
-      <h1>Operators</h1>
-      <p>Тут будет таблица операторов</p>
-    </section>
+  <select id="new-role">
+    <option value="operator">Оператор</option>
+    <option value="supervisor">Супервайзер</option>
+    <option value="admin">Админ</option>
+  </select>
 
-    <!-- USERS -->
-    <section id="users" class="page">
-  <h1>Users</h1>
-
-  <!-- 🔐 ПРОВЕРКА АДМИНА -->
-  <div id="access-box" class="auth-card">
-    <h3>🔐 Подтверждение администратора</h3>
-    <input id="admin-code" type="password" placeholder="Админ-код">
-    <button class="btn-primary" id="check-code">Войти</button>
-    <div id="access-status" class="status-text"></div>
-  </div>
-
-  <!-- ➕ СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ -->
-  <div id="admin-panel" class="card user-card" style="display:none;">
-    <h3>➕ Создать пользователя</h3>
-    <p class="hint">Новый оператор, супервайзер или админ</p>
-
-    <div class="field">
-      <label>Логин</label>
-      <input id="new-login" placeholder="ivan">
-    </div>
-
-    <div class="field">
-      <label>Пароль</label>
-      <input id="new-password" type="password">
-    </div>
-
-    <div class="field">
-      <label>Роль</label>
-      <select id="new-role">
-        <option value="operator">Оператор</option>
-        <option value="supervisor">Супервайзер</option>
-        <option value="admin">Админ</option>
-      </select>
-    </div>
-
-    <button class="btn-accent" id="create-user-btn">
-      ➕ Создать пользователя
-    </button>
-
-    <div id="create-user-status" class="status-text"></div>
-  </div>
-</section>
-
-
-  </main>
+  <button id="create-user-btn">Создать</button>
+  <div id="create-user-status"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, get, set, onValue }
-from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
@@ -180,35 +81,13 @@ const db = getDatabase(app);
 const adminLogin = localStorage.getItem("pulse_admin_login");
 if (!adminLogin) location.href = "index.html";
 
-/* NAVIGATION */
-document.querySelectorAll('.sidebar button').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(btn.dataset.page).classList.add('active');
-  };
-});
-
-/* DASHBOARD */
-onValue(ref(db, "operators"), snap => {
-  const ops = snap.val() || {};
-  let online = 0;
-
-  for (let name in ops) {
-    if (Date.now() - (ops[name].lastSeen || 0) < 15000) {
-      online++;
-    }
-  }
-
-  document.getElementById("stats").innerText =
-    "Операторов онлайн: " + online;
-});
-
-/* ADMIN LOGIN */
+// 🔐 проверка кода
 document.getElementById("check-code").onclick = async () => {
   const input = document.getElementById("admin-code").value;
   const status = document.getElementById("access-status");
 
-  const snap = await get(ref(db, "users/" + adminLogin + "/password"));
+  const snap = await get(ref(db, "users/" + adminLogin + "/password"))
+;
   const real = snap.val();
 
   if (String(input) === String(real)) {
@@ -220,7 +99,7 @@ document.getElementById("check-code").onclick = async () => {
   }
 };
 
-/* CREATE USER */
+// ➕ создание пользователя
 document.getElementById("create-user-btn").onclick = async () => {
   const login = document.getElementById("new-login").value.trim().toLowerCase();
   const password = document.getElementById("new-password").value.trim();
@@ -249,8 +128,4 @@ document.getElementById("create-user-btn").onclick = async () => {
 
 </body>
 </html>
-
-
-
-
 

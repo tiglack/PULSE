@@ -277,9 +277,13 @@ loginBtn.onclick = async () => {
 
 const roleInfo = document.getElementById("role-info");
 const usersTab = document.getElementById("users-tab");
+const login = localStorage.getItem("pulse_admin_login");
+if (!login) {
+  throw new Error("Не авторизован");
+}
 
-const snap = await get(ref(db,"users/"+login));
-const me = snap.val();
+  const snap = await get(ref(db,"users/"+login));
+  const me = snap.val();
 
 roleInfo.textContent = "Роль: " + me.role;
 

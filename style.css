@@ -1208,8 +1208,85 @@ body {
   padding-top: 0;
 }
 
+/* ===== PULSE ADMIN DESIGN SYSTEM ===== */
+
+:root {
+  --bg-main: radial-gradient(circle at top, #0f1115, #08090c);
+  --bg-glass: rgba(20, 22, 28, 0.75);
+  --bg-glass-strong: rgba(16, 18, 24, 0.9);
+
+  --border-soft: rgba(255,255,255,0.06);
+  --border-accent: rgba(212,175,55,0.35);
+
+  --text-main: #eaeaea;
+  --text-muted: rgba(255,255,255,0.55);
+
+  --accent: #d4af37;
+  --accent-glow: rgba(212,175,55,0.45);
+
+  --radius: 16px;
+  --radius-sm: 10px;
+
+  --blur: blur(16px);
+  --transition-fast: 0.2s ease;
+  --transition: 0.35s ease;
+}
+
+/* ===== STEP 2: ADMIN LAYOUT (PREMIUM DARK) ===== */
+
+body {
+  background: radial-gradient(circle at top, #0f1115, #08090c);
+  color: #eaeaea;
+}
+
+.admin-layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+  background: rgba(16, 18, 24, 0.9);
+  backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 24px;
+}
+
+.sidebar h2 {
+  color: #d4af37;
+  margin-bottom: 28px;
+  letter-spacing: 1px;
+}
+
+/* КНОПКИ В SIDEBAR */
+.sidebar button {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.6);
+  transition: 0.2s ease;
+}
+
+.sidebar button:hover {
+  background: rgba(212,175,55,0.08);
+  color: #d4af37;
+}
+
+/* ПРАВАЯ ЧАСТЬ */
+.content {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+
 
 /* ===== END NOTES ===== */
+
 
 
 

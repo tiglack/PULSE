@@ -107,6 +107,36 @@ input, select {
 
 <div class="container">
 
+  <!-- LIVE STATUS -->
+<div class="card">
+  <h2>🧭 Кто чем занят сейчас</h2>
+
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px;">
+
+    <div>
+      <h3>🟢 В звонке</h3>
+      <div id="list-call">—</div>
+    </div>
+
+    <div>
+      <h3>🟡 На паузе</h3>
+      <div id="list-pause">—</div>
+    </div>
+
+    <div>
+      <h3>🔵 Активны</h3>
+      <div id="list-active">—</div>
+    </div>
+
+    <div>
+      <h3>⚪ Оффлайн</h3>
+      <div id="list-offline">—</div>
+    </div>
+
+  </div>
+</div>
+
+
   <!-- ОПЕРАТОРЫ -->
   <div id="operators" class="card">
     <h2>🟢 Операторы онлайн</h2>
@@ -240,6 +270,53 @@ document.getElementById("create-user-btn").onclick = async ()=>{
   document.getElementById("new-password").value="";
   alert("Пользователь создан");
 };
+
+  // ===== LIVE STATUS =====
+onValue(ref(db, "operators"), snap => {
+
+  const lists = {
+    call: [],
+    pause: [],
+    active: [],
+    offline: []
+  };
+
+  snap.forEach(c => {
+    const name = c.key;
+    const o = c.val();
+    const status = o.status || "offline";
+
+    let label = name;
+
+    if (o.statusSince) {
+      const sec = Math.floor((Date.now() - o.statusSince) / 1000);
+      label += ` (${formatTime(sec)})`;
+    }
+
+    if (lists[status]) {
+      lists[status].push(label);
+    } else {
+      lists.offline.push(label);
+    }
+  });
+
+  renderList("list-call", lists.call);
+  renderList("list-pause", lists.pause);
+  renderList("list-active", lists.active);
+  renderList("list-offline", lists.offline);
+});
+
+function renderList(id, arr) {
+  document.getElementById(id).innerHTML =
+    arr.length ? arr.join("<br>") : "—";
+}
+
+function formatTime(sec) {
+  const m = String(Math.floor(sec / 60)).padStart(2,"0");
+  const s = String(sec % 60).padStart(2,"0");
+  return `${m}:${s}`;
+}
+
 </script>
 
 </body>

@@ -2,273 +2,128 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Supervisor Dashboard</title>
+  <title>Supervisor / Admin Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #0f1115;
-      color: #fff;
-      margin: 0;
-      padding: 20px;
+      background:#0f1115;
+      color:#fff;
+      font-family:Arial,sans-serif;
+      padding:20px;
     }
-
-    h1 { margin-bottom: 15px; }
-
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 10px;
-      margin-bottom: 20px;
+    h1,h2,h3 { margin-bottom:10px; }
+    input,select,button {
+      padding:8px;
+      margin:5px 0;
+      border-radius:6px;
+      border:none;
+      background:#1c1f26;
+      color:#fff;
     }
-
-    select, input, button {
-      padding: 8px;
-      border-radius: 6px;
-      border: none;
-      background: #1c1f26;
-      color: #fff;
+    button { cursor:pointer; }
+    .box {
+      background:#1c1f26;
+      padding:15px;
+      border-radius:10px;
+      margin-bottom:20px;
     }
-
-    button {
-      cursor: pointer;
-      background: #27ae60;
-    }
-
-    .shift {
-      background: #1c1f26;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 12px;
-      border-left: 5px solid #2ecc71;
-    }
-
-    .finished {
-      opacity: 0.6;
-      border-left-color: #888;
-    }
-
-    .row {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      margin-bottom: 6px;
-    }
-
-    .badge {
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      background: #333;
-    }
-
-    .active { background: #27ae60; }
-    .call { background: #3498db; }
-    .pause { background: #f1c40f; color:#000; }
-    .offline { background: #e74c3c; }
-    .finishedBadge { background:#777; }
-
-    #admin-panel { display:none; }
+    .ok { color:#2ecc71; }
+    .err { color:#e74c3c; }
   </style>
 </head>
+
 <body>
 
-<!-- 🔐 CODE LOCK -->
-<div id="code-lock">
-  <h2>🔐 Введите код доступа</h2>
-  <input type="password" id="admin-code" placeholder="Код">
+<h1>👑 Админ / Супервайзер панель</h1>
+
+<div id="access-box" class="box">
+  <h2>🔐 Код доступа</h2>
+  <input id="admin-code" type="password" placeholder="Введите код">
   <button id="check-code">Войти</button>
-  <div id="code-error" style="color:red; margin-top:10px;"></div>
+  <div id="access-status"></div>
 </div>
 
-<!-- 👑 ADMIN PANEL -->
-<div id="admin-panel">
-  <h1>👑 Supervisor Dashboard</h1>
- 
-  <h3>➕ Создать пользователя</h3>
+<div id="admin-panel" class="box" style="display:none;">
+  <h2>➕ Создать пользователя</h2>
 
-<input id="new-login" placeholder="Логин">
-<input id="new-password" placeholder="Пароль">
+  <input id="new-login" placeholder="Логин">
+  <input id="new-password" placeholder="Пароль">
 
-<select id="new-role">
-  <option value="operator">Оператор</option>
-  <option value="supervisor">Супервайзер</option>
-  <option value="admin">Админ</option>
-</select>
+  <select id="new-role">
+    <option value="operator">Оператор</option>
+    <option value="supervisor">Супервайзер</option>
+    <option value="admin">Админ</option>
+  </select>
 
-<button id="create-user-btn">Создать</button>
-<div id="create-user-status"></div>
-
-
-  <div class="controls">
-    <select id="statusFilter">
-      <option value="all">Все статусы</option>
-      <option value="active">Активные</option>
-      <option value="finished">Завершённые</option>
-    </select>
-
-    <select id="channelFilter">
-      <option value="all">Все каналы</option>
-      <option value="Call Back">Call Back</option>
-      <option value="Hot Line">Hot Line</option>
-    </select>
-
-    <select id="sortBy">
-      <option value="updated">По времени</option>
-      <option value="calls">По звонкам</option>
-      <option value="name">По имени</option>
-    </select>
-
-    <input id="searchInput" placeholder="🔍 Поиск оператора">
-  </div>
-
-  <div id="shifts"></div>
+  <button id="create-user-btn">Создать</button>
+  <div id="create-user-status"></div>
 </div>
 
-<!-- 🔥 FIREBASE + LOGIC -->
+<!-- FIREBASE -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-/* ===== FIREBASE CONFIG ===== */
-const firebaseConfig = {
-  apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
-  authDomain: "pulse-ae670.firebaseapp.com",
-  databaseURL: "https://pulse-ae670-default-rtdb.firebaseio.com",
-  projectId: "pulse-ae670",
-  storageBucket: "pulse-ae670.firebasestorage.app",
-  messagingSenderId: "353326683454",
-  appId: "1:353326683454:web:34ed86590e53cf60a2c86f"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
+    authDomain: "pulse-ae670.firebaseapp.com",
+    databaseURL: "https://pulse-ae670-default-rtdb.firebaseio.com",
+    projectId: "pulse-ae670",
+    storageBucket: "pulse-ae670.firebasestorage.app",
+    messagingSenderId: "353326683454",
+    appId: "1:353326683454:web:34ed86590e53cf60a2c86f"
+  };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
- 
-/* ===== AUTH ===== */
-const login = localStorage.getItem("pulse_admin_login");
-if (!login) {
-  location.href = "index.html";
-}
+  const login = localStorage.getItem("pulse_admin_login");
+  if (!login) location.href = "index.html";
 
+  // 🔐 проверка кода
+  document.getElementById("check-code").onclick = async () => {
+    const input = document.getElementById("admin-code").value;
+    const status = document.getElementById("access-status");
 
-/* ===== CODE CHECK ===== */
-document.getElementById("check-code").onclick = async () => {
-  const input = document.getElementById("admin-code").value;
+    const snap = await get(ref(db, "users/" + login + "/accessCode"));
+    const real = snap.val();
 
-  const snap = await get(ref(db, "users/" + login + "/accessCode"));
-  const realCode = snap.val();
-
-  if (String(input) === String(realCode)) {
-    document.getElementById("code-lock").style.display = "none";
-    document.getElementById("admin-panel").style.display = "block";
-  } else {
-    document.getElementById("code-error").textContent = "❌ Неверный код";
-  }
-};
-
-/* ===== DATA ===== */
-const shiftsEl = document.getElementById("shifts");
-const statusFilter = document.getElementById("statusFilter");
-const channelFilter = document.getElementById("channelFilter");
-const sortBy = document.getElementById("sortBy");
-const searchInput = document.getElementById("searchInput");
-
-let allShifts = [];
-let operators = {};
-
-function getLiveStatus(name) {
-  const o = operators[name];
-  if (!o) return "offline";
-  if (Date.now() - o.lastSeen > 120000) return "offline";
-  return o.status || "offline";
-}
-
-/* ===== RENDER ===== */
-function render() {
-  let list = [...allShifts];
-
-  if (statusFilter.value !== "all")
-    list = list.filter(s => s.status === statusFilter.value);
-
-  if (channelFilter.value !== "all")
-    list = list.filter(s => s.channel === channelFilter.value);
-
-  if (searchInput.value)
-    list = list.filter(s =>
-      s.operator.toLowerCase().includes(searchInput.value.toLowerCase())
-    );
-
-  if (sortBy.value === "calls")
-    list.sort((a,b)=> (b.calls||0)-(a.calls||0));
-  else if (sortBy.value === "name")
-    list.sort((a,b)=> a.operator.localeCompare(b.operator));
-  else
-    list.sort((a,b)=> (b.updatedAt||b.startedAt)-(a.updatedAt||a.startedAt));
-
-  shiftsEl.innerHTML = "";
-
-  list.forEach(s => {
-    const status = getLiveStatus(s.operator);
-    const div = document.createElement("div");
-    div.className = "shift " + (s.status==="finished"?"finished":"");
-    div.innerHTML = `
-      <div class="row">
-        <strong>👤 ${s.operator}</strong>
-        <span class="badge ${status}">${status}</span>
-      </div>
-      <div class="row">
-        <div>📞 ${s.calls||0}</div>
-        <div>📡 ${s.channel}</div>
-      </div>
-    `;
-    shiftsEl.appendChild(div);
-  });
-}
-
-/* ===== LISTENERS ===== */
-onValue(ref(db,"shifts"), snap=>{
-  allShifts = snap.exists()?Object.values(snap.val()):[];
-  render();
-});
-
-onValue(ref(db,"operators"), snap=>{
-  operators = snap.exists()?snap.val():{};
-  render();
-});
-
-statusFilter.onchange =
-channelFilter.onchange =
-sortBy.onchange =
-searchInput.oninput = render;
-
-<script>
-document.getElementById("create-user-btn").onclick = async () => {
-  const login = document.getElementById("new-login").value.trim();
-  const password = document.getElementById("new-password").value.trim();
-  const role = document.getElementById("new-role").value;
-  const status = document.getElementById("create-user-status");
-
-  if (!login || !password) {
-    status.textContent = "❌ Заполните все поля";
-    return;
-  }
-
-  await window.firebaseSet(
-    window.firebaseRef(window.firebaseDB, "users/" + login),
-    {
-      login,
-      password,
-      role
+    if (String(input) === String(real)) {
+      document.getElementById("access-box").style.display = "none";
+      document.getElementById("admin-panel").style.display = "block";
+    } else {
+      status.textContent = "❌ Неверный код";
+      status.className = "err";
     }
-  );
+  };
 
-  status.textContent = "✅ Пользователь создан";
-};
+  // ➕ создание пользователя
+  document.getElementById("create-user-btn").onclick = async () => {
+    const loginVal = document.getElementById("new-login").value.trim();
+    const passVal = document.getElementById("new-password").value.trim();
+    const roleVal = document.getElementById("new-role").value;
+    const status = document.getElementById("create-user-status");
+
+    if (!loginVal || !passVal) {
+      status.textContent = "❌ Заполните все поля";
+      status.className = "err";
+      return;
+    }
+
+    await set(ref(db, "users/" + loginVal), {
+      login: loginVal,
+      password: passVal,
+      role: roleVal
+    });
+
+    status.textContent = "✅ Пользователь создан";
+    status.className = "ok";
+
+    document.getElementById("new-login").value = "";
+    document.getElementById("new-password").value = "";
+  };
 </script>
 
-</script>
 </body>
 </html>
-

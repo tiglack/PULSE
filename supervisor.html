@@ -114,19 +114,7 @@
     <section id="users" class="page">
   <h1>Users</h1>
 
-  <!-- ACCESS -->
-  <div id="access-box" class="auth-card">
-    <h3>🔐 Подтверждение администратора</h3>
-    <p class="hint">Введите админ-код для доступа</p>
-
-    <input id="admin-code" type="password" placeholder="Админ-код">
-    <button class="btn-primary" id="check-code">Войти</button>
-
-    <div id="access-status" class="status-text"></div>
-  </div>
-
-  <!-- CREATE USER -->
-  <div id="admin-panel" class="user-card" style="display:none;">
+  <div id="admin-panel" class="user-card">
     <h3>➕ Создать пользователя</h3>
     <p class="hint">Новый оператор, супервайзер или админ</p>
 
@@ -137,7 +125,7 @@
 
     <div class="field">
       <label>Пароль</label>
-      <input id="new-password" type="password" placeholder="••••••••">
+      <input id="new-password" type="password">
     </div>
 
     <div class="field">
@@ -153,7 +141,9 @@
       ➕ Создать пользователя
     </button>
 
-    <div id="create-user-status" class="status-text"></div>
+    <div id="create-user-status" class="status-text ok">
+      Пользователь создан
+    </div>
   </div>
 </section>
 
@@ -250,4 +240,5 @@ document.getElementById("create-user-btn").onclick = async () => {
 
 </body>
 </html>
+
 

@@ -96,6 +96,15 @@ const db = getDatabase(app);
 const adminLogin = localStorage.getItem("pulse_admin_login");
 if (!adminLogin) location.href = "index.html";
 
+  document.querySelectorAll('.sidebar button').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(btn.dataset.page).classList.add('active');
+  };
+});
+
+  
+
 // 🔐 проверка кода
 document.getElementById("check-code").onclick = async () => {
   const input = document.getElementById("admin-code").value;
@@ -143,5 +152,6 @@ document.getElementById("create-user-btn").onclick = async () => {
 
 </body>
 </html>
+
 
 

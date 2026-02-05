@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+DEBUG:<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -196,7 +196,7 @@ const userSnap = await get(ref(db,"users/"+login));
 const me = userSnap.val();
 
 roleInfo.textContent = "Роль: " + me.role;
-roleInfo.textContent += " | DEBUG: " + JSON.stringify(me);
+
   
 // 🔥 ЖЁСТКАЯ ПРОВЕРКА
 if (me && me.role && me.role.trim() === "admin") {
@@ -259,7 +259,6 @@ window.deleteUser=async(login)=>{
 };
 </script>
 <script type="module">
-  ...
   window.deleteUser = async (login) => {
     if (!confirm("Удалить пользователя " + login + "?")) return;
     await remove(ref(db, "users/" + login));

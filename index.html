@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pulse</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏱️</text></svg>">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <div class="modal active" id="login-modal">
+    <div class="login-modal-content">
+      <h2>Введите имя оператора</h2>
+      <input id="operator-name-input" placeholder="Ваше имя" autofocus>
+      <button id="login-button">Войти</button>
+    </div>
+  </div>
+
+  <div id="app" style="display:none;">
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-container">
+          <div class="logo-img">⏱️</div>
+          <h1>PULSE</h1>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-indicator"></div>
+        <div class="operator-info">
+          <span>Оператор: <strong id="operator-name">—</strong></span>
+        </div>
+        <button id="start-shift" class="btn-shift">Начать смену</button>
+        <button id="end-shift" class="btn-shift">Завершить смену</button>
+        <button id="pause-shift-btn" class="btn-shift">⏸ Пауза</button>
+        <button id="channel-toggle-button" class="btn-channel">Call Back</button>
+        <button id="bg-settings-btn" class="btn-shift" title="Настройки фона">🎨</button>
+        <button id="hotkeys-toggle" class="btn-shift" title="Ключ коды">⌨️</button>
+        <button id="theme-toggle" class="theme-toggle" title="Сменить тему">🌙</button>
+      </div>
+    </header>
+
+    <div class="container">
+      <section class="timers">
+        <div class="timer-card"><span>Смена</span><span id="shift-timer" class="timer-value">00:00:00</span></div>
+        <div class="timer-card"><span>Звонок</span><span id="call-timer" class="timer-value">00:00:00</span></div>
+        <div class="timer-card"><span>Пауза</span><span id="pause-total-timer" class="timer-value">00:00:00</span></div>
+	<div class="timer-card"><span>Количество звонков</span>  <span id="total-calls" class="timer-value">0</span></div>   
+
+  <div class="top3-block">
+  <h3 style="margin-bottom:10px;">🏆 TOP-3 операторов</h3>
+  <div id="top3-list"></div>
+</div>
+  
+  <div class="notes-box">
+  <div class="notes-header">
+    <span>📝 Личные заметки</span>
+    <span id="notes-status" class="notes-status">—</span>
+  </div>
+
+  <textarea
+    id="personal-notes"
+    placeholder="Пиши для себя. Сохраняется автоматически…"
+    rows="5"
+  ></textarea>
+</div>
+
+</section>
+
+
+
+      <section class="projects-section">
+        <div class="projects-header">
+          <h2>Проекты</h2>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button id="edit-projects-btn" class="btn-edit" title="Добавить или изменить проекты">✏️</button>
+            <span id="project-count">Проектов: 5</span>
+          </div>
+        </div>
+        
+        <div style="text-align: center; margin-bottom: 20px; padding: 10px; background: rgba(212, 175, 55, 0.1); border-radius: 8px; border-left: 3px solid var(--accent);">
+          <p style="margin: 0; font-size: 14px; color: var(--accent);">
+            💡 Нужно больше проектов? Нажмите на <strong>✏️</strong> чтобы добавить!
+          </p>
+        </div>
+        
+        <div class="projects-grid" id="projects-container"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="pause-modal" class="modal">
+    <div class="login-modal-content">
+      <h2>⏸ ПЕРЕРЫВ</h2>
+      <div id="pause-timer">00:00</div>
+      <button id="end-pause-btn" class="btn-shift">Завершить</button>
+    </div>
+  </div>
+
+  <div id="report-modal" class="modal">
+    <div class="login-modal-content">
+      <h2>🧾 Отчёт</h2>
+      <div id="report-body"></div>
+      <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+        <button id="export-pdf" class="btn-shift">📊 Экспорт PDF</button>
+        <button id="export-csv" class="btn-shift">📝 Экспорт CSV</button>
+        <button id="close-report" class="btn-shift">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-projects-modal" class="modal">
+    <div class="login-modal-content">
+      <h2>✏️ Редактирование проектов</h2>
+      
+      <div style="background: rgba(212, 175, 55, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 3px solid var(--accent);">
+        <p style="margin: 0; font-size: 14px; color: var(--accent);">
+          📝 Чтобы добавить проект, нажмите кнопку "Добавить проект" ниже
+        </p>
+      </div>
+      
+      <div id="projects-edit-container" style="max-height: 400px; overflow-y: auto; margin: 20px 0;"></div>
+      <button id="add-project-btn" class="btn-shift" style="margin-bottom: 15px;">+ Добавить проект</button>
+      <div style="display: flex; gap: 10px;">
+        <button id="save-projects-btn" class="btn-shift">Сохранить</button>
+        <button id="cancel-edit-btn" class="btn-shift" style="background: #666;">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-calls-modal" class="modal">
+    <div class="login-modal-content">
+      <h2>✏️ Изменить количество звонков</h2>
+      <div style="margin: 20px 0;">
+        <div style="font-size: 18px; margin-bottom: 10px; color: var(--accent);">
+          Проект: <strong id="edit-calls-project-name"></strong>
+        </div>
+        <input 
+          id="edit-calls-input" 
+          type="number" 
+          min="0" 
+          placeholder="Введите количество звонков"
+          style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+        >
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button id="save-calls-btn" class="btn-shift">Сохранить</button>
+        <button id="cancel-edit-calls-btn" class="btn-shift" style="background: #666;">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirm-channel-modal" class="modal">
+    <div class="login-modal-content">
+      <div style="text-align: center; margin-bottom: 25px;">
+        <div style="font-size: 48px; margin-bottom: 15px;">🔁</div>
+        <h2 style="color: var(--accent); margin-bottom: 10px;">Сменить канал?</h2>
+        <p style="opacity: 0.8; line-height: 1.5;">
+          Вы уверены, что хотите сменить канал с 
+          <span id="current-channel-name" style="color: var(--accent); font-weight: 600;">Call Back</span> на 
+          <span id="new-channel-name" style="color: var(--warning); font-weight: 600;">Hot Line</span>?
+        </p>
+      </div>
+      <div style="display: flex; gap: 15px; justify-content: center;">
+        <button id="confirm-channel-change" class="btn-shift" style="background: linear-gradient(145deg, #27ae60, #219a52);">Да, сменить</button>
+        <button id="cancel-channel-change" class="btn-shift" style="background: #666;">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirm-end-shift-modal" class="modal">
+    <div class="login-modal-content">
+      <div style="text-align: center; margin-bottom: 25px;">
+        <div style="font-size: 48px; margin-bottom: 15px;">⏹️</div>
+        <h2 style="color: var(--accent); margin-bottom: 10px;">Завершить смену?</h2>
+        <p style="opacity: 0.8; line-height: 1.5; margin-bottom: 20px;">
+          Вы уверены, что хотите завершить текущую смену?<br>
+          Будет сформирован отчет и сброшены все таймеры.
+        </p>
+        <div style="background: rgba(212, 175, 55, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent);">
+          <p style="margin: 0; font-size: 14px; color: var(--accent);">
+            ⏱️ <strong>Время смены:</strong> <span id="shift-duration-confirm">00:00:00</span><br>
+            📞 <strong>Всего звонков:</strong> <span id="total-calls-confirm">0</span>
+          </p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 15px; justify-content: center;">
+        <button id="confirm-end-shift" class="btn-shift" style="background: linear-gradient(145deg, #e74c3c, #c0392b);">Да, завершить</button>
+        <button id="cancel-end-shift" class="btn-shift" style="background: #666;">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="background-modal" class="modal">
+    <div class="login-modal-content">
+      <h2>🎨 Настройка фона</h2>
+      
+      <div style="margin: 20px 0;">
+        <h3>Градиенты</h3>
+        <div class="background-options">
+          <div class="bg-option" data-bg="gradient1" style="background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);"></div>
+          <div class="bg-option" data-bg="gradient2" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);"></div>
+          <div class="bg-option" data-bg="gradient3" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);"></div>
+          <div class="bg-option" data-bg="gradient4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);"></div>
+          <div class="bg-option" data-bg="gradient5" style="background: linear-gradient(135deg, #4b006e 0%, #8e44ad 50%, #4b006e 100%);"></div>
+          <div class="bg-option" data-bg="gradient6" style="background: linear-gradient(135deg, #c0392b 0%, #e74c3c 50%, #c0392b 100%);"></div>
+        </div>
+      </div>
+
+      <div style="margin: 20px 0;">
+        <h3>Сплошные цвета</h3>
+        <div class="background-options">
+          <div class="bg-option" data-bg="color1" style="background: #0a0a0a;"></div>
+          <div class="bg-option" data-bg="color2" style="background: #1a1a1a;"></div>
+          <div class="bg-option" data-bg="color3" style="background: #2a2a2a;"></div>
+          <div class="bg-option" data-bg="color4" style="background: #1e1e1e;"></div>
+          <div class="bg-option" data-bg="color5" style="background: #252525;"></div>
+          <div class="bg-option" data-bg="color6" style="background: #333333;"></div>
+        </div>
+      </div>
+
+      <div style="margin: 20px 0;">
+        <h3>Загрузить свое изображение</h3>
+        <input type="file" id="bg-upload" accept="image/*" style="width: 100%; margin: 10px 0;">
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button id="preview-bg" class="btn-shift">Предпросмотр</button>
+          <button id="reset-bg" class="btn-shift" style="background: #666;">Сбросить</button>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button id="save-bg" class="btn-shift">Сохранить</button>
+        <button id="cancel-bg" class="btn-shift" style="background: #666;">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="hotkeys-modal" class="modal">
+    <div class="login-modal-content" style="max-width: 700px;">
+      <h2>⌨️ ключи коды</h2>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 25px 0;">
+        <!-- Hot Line -->
+        <div>
+          <h3 style="color: #ff6b6b; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+            🔥 Hot Line
+          </h3>
+          <div class="hotkey-item">
+            <span class="hotkey-code">*09951*#</span>
+            <span class="hotkey-desc">Вход в очередь</span>
+          </div>
+          <div class="hotkey-item">
+            <span class="hotkey-code">*09959*#</span>
+            <span class="hotkey-desc">Выход с очереди</span>
+          </div>
+          <div class="hotkey-item">
+            <span class="hotkey-code">*09955*#</span>
+            <span class="hotkey-desc">Пауза</span>
+          </div>
+          <div class="hotkey-item">
+            <span class="hotkey-code">*09950*#</span>
+            <span class="hotkey-desc">Выход с паузы</span>
+          </div>
+        </div>
+        
+        <!-- Call Back -->
+        <div>
+          <h3 style="color: #4ecdc4; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+            📞 Call Back
+          </h3>
+          <div class="hotkey-item">
+            <span class="hotkey-code">*5551*#код</span>
+            <span class="hotkey-desc">Вход в очередь</span>
+          </div>
+          <div class="hotkey-item">
+            <span class="hotkey-code">*5559*#код</span>
+            <span class="hotkey-desc">Выход с очереди</span>
+          </div>
+          <div class="hotkey-item">
+            <span class="hotkey-code">*6665*#</span>
+            <span class="hotkey-desc">Пауза</span>
+          </div>
+          <div class="hotkey-item">
+            <span class="hotkey-code">*6660*#</span>
+            <span class="hotkey-desc">Выход с паузы</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: rgba(212, 175, 55, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent); margin: 20px 0;">
+        <p style="margin: 0; font-size: 14px; color: var(--accent); text-align: center;">
+          💡 Ключи для входа в линию зависимости от выбранного канала
+        </p>
+      </div>
+
+      <button id="close-hotkeys" class="btn-shift" style="margin-top: 15px;">Закрыть</button>
+    </div>
+  </div>
+
+  <script type="module">
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+
+  import {
+    getDatabase,
+    ref,
+    set,
+    update,
+    onValue,
+    get
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
+    authDomain: "pulse-ae670.firebaseapp.com",
+    databaseURL: "https://pulse-ae670-default-rtdb.firebaseio.com",
+    projectId: "pulse-ae670",
+    storageBucket: "pulse-ae670.firebasestorage.app",
+    messagingSenderId: "353326683454",
+    appId: "1:353326683454:web:34ed86590e53cf60a2c86f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // 👇👇👇 ВАЖНО
+  window.firebaseDB = db;
+  window.firebaseRef = ref;
+  window.firebaseSet = set;
+  window.firebaseUpdate = update;
+  window.firebaseOnValue = onValue;
+  window.firebaseGet = get;
+</script>
+
+  <script type="module" src="firebase-init.js"></script>
+  <script src="script.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

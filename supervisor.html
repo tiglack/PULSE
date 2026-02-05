@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Supervisor Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    .badge.call { background: #3498db; }
+    .badge.pause { background: #f1c40f; color: #000; }
+    .badge.offline { background: #e74c3c; }
+    .badge.finished { background: #888; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f1115;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 15px; }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    select, input {
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      background: #1c1f26;
+      color: #fff;
+    }
+
+    .shift {
+      background: #1c1f26;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 12px;
+      border-left: 5px solid #2ecc71;
+    }
+    .finished {
+      opacity: 0.6;
+      border-left-color: #888;
+    }
+
+    .row {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      background: #333;
+    }
+    .active { background: #27ae60; }
+
+    
+  </style>
+</head>
+<body>
+
+  <div id="code-lock">
+  <h2>🔐 Введите код доступа</h2>
+  <input type="password" id="admin-code" placeholder="Код">
+  <button id="check-code">Войти</button>
+  <div id="code-error" style="color:red; margin-top:10px;"></div>
+</div>
+
+<div id="admin-panel" style="display:none;">
+  <h1>👑 Панель администратора</h1>
+  <!-- ТУТ БУДЕТ ПАНЕЛЬ -->
+</div>
+
+  
+<h1>👀 Supervisor Dashboard</h1>
+
+
+<div class="controls">
+  <select id="statusFilter">
+    <option value="all">Все статусы</option>
+    <option value="active">Только активные</option>
+    <option value="finished">Только завершённые</option>
+  </select>
+
+  <select id="channelFilter">
+    <option value="all">Все каналы</option>
+    <option value="Call Back">Call Back</option>
+    <option value="Hot Line">Hot Line</option>
+  </select>
+
+  <select id="sortBy">
+    <option value="updated">Сортировка: по времени</option>
+    <option value="calls">Сортировка: по звонкам</option>
+    <option value="name">Сортировка: по имени</option>
+  </select>
+
+  <input id="searchInput" placeholder="🔍 Поиск оператора">
+</div>
+
+<div id="shifts"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getDatabase, ref, onValue }
+    from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
+    authDomain: "pulse-ae670.firebaseapp.com",
+    databaseURL: "https://pulse-ae670-default-rtdb.firebaseio.com",
+    projectId: "pulse-ae670",
+    storageBucket: "pulse-ae670.firebasestorage.app",
+    messagingSenderId: "353326683454",
+    appId: "1:353326683454:web:34ed86590e53cf60a2c86f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const shiftsEl = document.getElementById("shifts");
+  const statusFilter = document.getElementById("statusFilter");
+  const channelFilter = document.getElementById("channelFilter");
+  const sortBy = document.getElementById("sortBy");
+  const searchInput = document.getElementById("searchInput");
+
+  let allShifts = [];
+  let operatorsStatus = {};
+
+  function getLiveStatus(operatorName) {
+  const op = operatorsStatus[operatorName];
+  if (!op) return "offline";
+
+  const now = Date.now();
+  if (now - op.lastSeen > 120000) return "offline"; // 2 минуты
+
+  return op.status || "offline";
+}
+
+  function render() {
+    let list = [...allShifts];
+
+    if (statusFilter.value !== "all") {
+      list = list.filter(s => s.status === statusFilter.value);
+    }
+
+    if (channelFilter.value !== "all") {
+      list = list.filter(s => s.channel === channelFilter.value);
+    }
+
+    if (searchInput.value.trim()) {
+      const q = searchInput.value.toLowerCase();
+      list = list.filter(s => s.operator.toLowerCase().includes(q));
+    }
+
+    if (sortBy.value === "calls") {
+      list.sort((a,b) => (b.calls || 0) - (a.calls || 0));
+    } else if (sortBy.value === "name") {
+      list.sort((a,b) => a.operator.localeCompare(b.operator));
+    } else {
+      list.sort((a,b) => (b.updatedAt || b.startedAt) - (a.updatedAt || a.startedAt));
+    }
+
+    shiftsEl.innerHTML = "";
+    if (!list.length) {
+      shiftsEl.innerHTML = "<p>Ничего не найдено</p>";
+      return;
+    }
+
+    list.forEach(shift => {
+      const liveStatus = getLiveStatus(shift.operator);
+      const div = document.createElement("div");
+      div.className = "shift " + (shift.status === "finished" ? "finished" : "");
+      div.innerHTML = `
+        <div class="row">
+          <strong>👤 ${shift.operator}</strong>
+          <span class="badge ${liveStatus}">
+            ${liveStatus}
+          </span>
+        </div>
+        <div class="row">
+          <div>📞 Звонков: <b>${shift.calls || 0}</b></div>
+          <div>📡 Канал: <b>${shift.channel}</b></div>
+        </div>
+      `;
+      shiftsEl.appendChild(div);
+    });
+  }
+
+  onValue(ref(db, "shifts"), snap => {
+    allShifts = snap.exists() ? Object.values(snap.val()) : [];
+    render();
+  });
+  onValue(ref(db, "operators"), snap => {
+  operatorsStatus = snap.exists() ? snap.val() : {};
+  render();
+});
+
+  statusFilter.onchange =
+  channelFilter.onchange =
+  sortBy.onchange =
+  searchInput.oninput = render;
+</script>
+<script>
+const login = localStorage.getItem("pulse_admin_login");
+
+if (!login) {
+  window.location.href = "index.html";
+}
+
+document.getElementById("check-code").onclick = () => {
+  const inputCode = document.getElementById("admin-code").value;
+
+  window.firebaseGet(
+    window.firebaseRef(window.firebaseDB, "users/" + login + "/accessCode")
+  ).then(snapshot => {
+    const realCode = snapshot.val();
+
+    if (String(inputCode) === String(realCode)) {
+      document.getElementById("code-lock").style.display = "none";
+      document.getElementById("admin-panel").style.display = "block";
+    } else {
+      document.getElementById("code-error").textContent = "❌ Неверный код";
+    }
+  });
+};
+</script>
+
+</body>
+
+<script type="module" src="firebase-init.js"></script>
+<script src="supervisor.js"></script>
+
+</body>
+</html>
+

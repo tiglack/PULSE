@@ -8,7 +8,7 @@
 <style>
 :root {
   --bg:#0a0a0a;
-  --card:rgba(20,20,20,.85);
+  --card:rgba(20,20,20,.9);
   --accent:#d4af37;
   --danger:#e74c3c;
   --success:#2ecc71;
@@ -60,7 +60,6 @@ h1 { color:var(--accent); margin:0; }
   padding:20px;
   margin-bottom:20px;
   border:1px solid rgba(255,255,255,.08);
-  backdrop-filter:blur(10px);
 }
 
 .hidden { display:none; }
@@ -73,7 +72,6 @@ table {
 th,td {
   padding:10px;
   border-bottom:1px solid rgba(255,255,255,.1);
-  text-align:left;
 }
 
 button {
@@ -85,17 +83,13 @@ button {
 }
 
 .btn-danger { background:var(--danger); color:#fff; }
-.btn-success { background:var(--success); color:#111; }
 .btn-accent { background:var(--accent); color:#111; }
 
-.status {
-  font-size:13px;
-  opacity:.8;
+input, select {
+  padding:8px;
+  border-radius:6px;
+  border:none;
 }
-.online { color:var(--success); }
-.offline { color:#777; }
-.call { color:var(--accent); }
-.pause { color:#f39c12; }
 </style>
 </head>
 
@@ -113,21 +107,12 @@ button {
 
 <div class="container">
 
-  
-  
-  
-  
-  
   <!-- ОПЕРАТОРЫ -->
   <div id="operators" class="card">
     <h2>🟢 Операторы онлайн</h2>
     <table>
       <thead>
-        <tr>
-          <th>Имя</th>
-          <th>Статус</th>
-          <th>Канал</th>
-        </tr>
+        <tr><th>Имя</th><th>Статус</th><th>Канал</th></tr>
       </thead>
       <tbody id="operators-list"></tbody>
     </table>
@@ -136,27 +121,22 @@ button {
   <!-- ПОЛЬЗОВАТЕЛИ -->
   <div id="users" class="card hidden">
     <h2>👤 Пользователи</h2>
-    <!-- СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ -->
-<div style="margin:15px 0; display:flex; gap:10px; flex-wrap:wrap;">
-  <input id="new-login" placeholder="Логин">
-  <input id="new-password" placeholder="Пароль">
-  <select id="new-role">
-    <option value="operator">operator</option>
-    <option value="supervisor">supervisor</option>
-    <option value="admin">admin</option>
-  </select>
-  <button id="create-user-btn" class="btn-accent">
-    Создать
-  </button>
-</div>
+
+    <!-- СОЗДАНИЕ -->
+    <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+      <input id="new-login" placeholder="Логин">
+      <input id="new-password" placeholder="Пароль">
+      <select id="new-role">
+        <option value="operator">operator</option>
+        <option value="supervisor">supervisor</option>
+        <option value="admin">admin</option>
+      </select>
+      <button id="create-user-btn" class="btn-accent">Создать</button>
+    </div>
 
     <table>
       <thead>
-        <tr>
-          <th>Логин</th>
-          <th>Роль</th>
-          <th>Действия</th>
-        </tr>
+        <tr><th>Логин</th><th>Роль</th><th></th></tr>
       </thead>
       <tbody id="users-list"></tbody>
     </table>
@@ -166,9 +146,8 @@ button {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, get, onValue, remove, update } 
+import { getDatabase, ref, get, onValue, update, remove }
 from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
@@ -189,20 +168,16 @@ if (!login) location.href = "index.html";
 const roleInfo = document.getElementById("role-info");
 const usersTab = document.getElementById("users-tab");
 
-const userSnap = await get(ref(db,"users/"+login));
-const me = userSnap.val();
+const snap = await get(ref(db,"users/"+login));
+const me = snap.val();
 
 roleInfo.textContent = "Роль: " + me.role;
 
-  
-// 🔥 ЖЁСТКАЯ ПРОВЕРКА
-if (me && me.role && me.role.trim() === "admin") {
+if (me.role === "admin") {
   usersTab.classList.remove("hidden");
-} else {
-  console.warn("Не admin, роль:", me?.role);
 }
 
-// TABS
+// tabs
 document.querySelectorAll(".tab").forEach(tab=>{
   tab.onclick=()=>{
     document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
@@ -212,105 +187,60 @@ document.querySelectorAll(".tab").forEach(tab=>{
   }
 });
 
-// OPERATORS
+// operators
 onValue(ref(db,"operators"), snap=>{
   const list=document.getElementById("operators-list");
   list.innerHTML="";
   snap.forEach(c=>{
     const o=c.val();
-    let cls="offline";
-    if(o.status==="active")cls="online";
-    if(o.status==="call")cls="call";
-    if(o.status==="pause")cls="pause";
     list.innerHTML+=`
       <tr>
         <td>${c.key}</td>
-        <td class="status ${cls}">${o.status||"offline"}</td>
+        <td>${o.status||"offline"}</td>
         <td>${o.channel||"-"}</td>
       </tr>`;
   });
 });
 
-// USERS (admin only)
-if(me.role==="admin"){
-onValue(ref(db,"users"), snap=>{
-  const list=document.getElementById("users-list");
-  list.innerHTML="";
-  snap.forEach(c=>{
-    const u=c.val();
-    list.innerHTML+=`
-      <tr>
-        <td>${c.key}</td>
-        <td>${u.role}</td>
-        <td>
-          <button class="btn-danger" onclick="deleteUser('${c.key}')">Удалить</button>
-        </td>
-      </tr>`;
+// users list
+if (me.role === "admin") {
+  onValue(ref(db,"users"), snap=>{
+    const list=document.getElementById("users-list");
+    list.innerHTML="";
+    snap.forEach(c=>{
+      list.innerHTML+=`
+        <tr>
+          <td>${c.key}</td>
+          <td>${c.val().role}</td>
+          <td>
+            <button class="btn-danger" onclick="deleteUser('${c.key}')">Удалить</button>
+          </td>
+        </tr>`;
+    });
   });
-});
 }
-<script>
-window.deleteUser=async(login)=>{
-  if(!confirm("Удалить пользователя "+login+"?"))return;
+
+// delete
+window.deleteUser = async(login)=>{
+  if(!confirm("Удалить "+login+"?"))return;
   await remove(ref(db,"users/"+login));
 };
 
-  const createBtn = document.getElementById("create-user-btn");
+// create
+document.getElementById("create-user-btn").onclick = async ()=>{
+  const login = document.getElementById("new-login").value.trim().toLowerCase();
+  const password = document.getElementById("new-password").value.trim();
+  const role = document.getElementById("new-role").value;
 
-  if (createBtn) {
-    createBtn.onclick = async () => {
-      const login = document.getElementById("new-login").value.trim().toLowerCase();
-      const password = document.getElementById("new-password").value.trim();
-      const role = document.getElementById("new-role").value;
+  if(!login || !password) return alert("Заполни поля");
 
-      if (!login || !password) {
-        alert("Заполни логин и пароль");
-        return;
-      }
+  await update(ref(db,"users/"+login),{ login, password, role });
 
-      await update(ref(db, "users/" + login), {
-        login,
-        password,
-        role
-      });
-
-      document.getElementById("new-login").value = "";
-      document.getElementById("new-password").value = "";
-
-      alert("Пользователь создан");
-    };
-  }
-
-  // СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ
-const createBtn = document.getElementById("create-user-btn");
-
-if (createBtn) {
-  createBtn.onclick = async () => {
-    const login = document.getElementById("new-login").value.trim().toLowerCase();
-    const password = document.getElementById("new-password").value.trim();
-    const role = document.getElementById("new-role").value;
-
-    if (!login || !password) {
-      alert("Заполни логин и пароль");
-      return;
-    }
-
-    await update(ref(db, "users/" + login), {
-      login,
-      password,
-      role
-    });
-
-    document.getElementById("new-login").value = "";
-    document.getElementById("new-password").value = "";
-
-    alert("Пользователь создан");
-  };
-}
-
-  
+  document.getElementById("new-login").value="";
+  document.getElementById("new-password").value="";
+  alert("Пользователь создан");
+};
 </script>
-
 
 </body>
 </html>

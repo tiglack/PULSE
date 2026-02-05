@@ -10,12 +10,18 @@
 </head>
 <body>
   <div class="modal active" id="login-modal">
-    <div class="login-modal-content">
-      <h2>Введите имя оператора</h2>
-      <input id="operator-name-input" placeholder="Ваше имя" autofocus>
-      <button id="login-button">Войти</button>
-    </div>
+  <div class="login-modal-content">
+    <h2>🔐 Вход в Pulse</h2>
+
+    <input id="login-input" placeholder="Логин">
+    <input id="password-input" type="password" placeholder="Пароль">
+
+    <button id="login-button">Войти</button>
+
+    <div id="login-error" style="margin-top:10px;color:#e74c3c;text-align:center;"></div>
   </div>
+</div>
+
 
   <div id="app" style="display:none;">
     <header class="header">

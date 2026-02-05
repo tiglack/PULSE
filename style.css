@@ -1,29 +1,3 @@
-:root {
-  --bg-dark: #0a0a0a;
-  --bg-card: #151515;
-  --text-light: #f0f0f0;
-  --accent: #d4af37;
-  --accent-hover: #ffd700;
-  --shadow: rgba(0, 0, 0, 0.6);
-  --success: #2ecc71;
-  --danger: #e74c3c;
-  --warning: #f39c12;
-  --info: #3498db;
-  --transition: all 0.3s ease;
-  --custom-background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
-  --custom-background-image: none;
-}
-
-:root[data-theme="light"] {
-  --bg-dark: #f0f0f0;
-  --bg-card: #ffffff;
-  --text-light: #333333;
-  --accent: #d4af37;
-  --accent-hover: #b89527;
-  --shadow: rgba(0, 0, 0, 0.1);
-}
-
-
 
 /* =========================================
    PULSE — FINAL CLEAN STYLE.CSS
@@ -208,6 +182,7 @@ button {
 .status-text.err {
   color: #e74c3c;
 }
+
 
 
 

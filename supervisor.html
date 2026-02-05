@@ -85,6 +85,21 @@
 <!-- 👑 ADMIN PANEL -->
 <div id="admin-panel">
   <h1>👑 Supervisor Dashboard</h1>
+ 
+  <h3>➕ Создать пользователя</h3>
+
+<input id="new-login" placeholder="Логин">
+<input id="new-password" placeholder="Пароль">
+
+<select id="new-role">
+  <option value="operator">Оператор</option>
+  <option value="supervisor">Супервайзер</option>
+  <option value="admin">Админ</option>
+</select>
+
+<button id="create-user-btn">Создать</button>
+<div id="create-user-status"></div>
+
 
   <div class="controls">
     <select id="statusFilter">
@@ -130,11 +145,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+ 
 /* ===== AUTH ===== */
 const login = localStorage.getItem("pulse_admin_login");
 if (!login) {
   location.href = "index.html";
 }
+
 
 /* ===== CODE CHECK ===== */
 document.getElementById("check-code").onclick = async () => {
@@ -226,6 +243,32 @@ channelFilter.onchange =
 sortBy.onchange =
 searchInput.oninput = render;
 
+<script>
+document.getElementById("create-user-btn").onclick = async () => {
+  const login = document.getElementById("new-login").value.trim();
+  const password = document.getElementById("new-password").value.trim();
+  const role = document.getElementById("new-role").value;
+  const status = document.getElementById("create-user-status");
+
+  if (!login || !password) {
+    status.textContent = "❌ Заполните все поля";
+    return;
+  }
+
+  await window.firebaseSet(
+    window.firebaseRef(window.firebaseDB, "users/" + login),
+    {
+      login,
+      password,
+      role
+    }
+  );
+
+  status.textContent = "✅ Пользователь создан";
+};
+</script>
+
 </script>
 </body>
 </html>
+

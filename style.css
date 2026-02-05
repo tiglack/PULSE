@@ -855,6 +855,36 @@ body.custom-bg-img::before {
   opacity: 0.9;
 }
 
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: #111;
+  padding: 20px;
+}
+
+.sidebar button {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+}
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
+
 /* Стили для тултипа */
 #hotkeys-toggle {
   position: relative;
@@ -1067,4 +1097,5 @@ body.custom-bg-img::before {
   box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.35);
 }
 /* ===== END NOTES ===== */
+
 

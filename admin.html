@@ -131,6 +131,20 @@ button {
   <!-- ПОЛЬЗОВАТЕЛИ -->
   <div id="users" class="card hidden">
     <h2>👤 Пользователи</h2>
+    <!-- СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ -->
+<div style="margin:15px 0; display:flex; gap:10px; flex-wrap:wrap;">
+  <input id="new-login" placeholder="Логин">
+  <input id="new-password" placeholder="Пароль">
+  <select id="new-role">
+    <option value="operator">operator</option>
+    <option value="supervisor">supervisor</option>
+    <option value="admin">admin</option>
+  </select>
+  <button id="create-user-btn" class="btn-accent">
+    Создать
+  </button>
+</div>
+
     <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
   <input id="new-login" placeholder="Логин">
   <input id="new-password" placeholder="Пароль">

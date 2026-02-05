@@ -112,31 +112,50 @@
 
     <!-- USERS -->
     <section id="users" class="page">
-      <h1>Users</h1>
+  <h1>Users</h1>
 
-      <div id="access-box" class="box">
-        <h3>🔐 Введите код</h3>
-        <input id="admin-code" type="password" placeholder="Код доступа">
-        <button class="action" id="check-code">Войти</button>
-        <div id="access-status"></div>
-      </div>
+  <!-- ACCESS -->
+  <div id="access-box" class="auth-card">
+    <h3>🔐 Подтверждение администратора</h3>
+    <p class="hint">Введите админ-код для доступа</p>
 
-      <div id="admin-panel" class="box" style="display:none;">
-        <h3>➕ Создать пользователя</h3>
+    <input id="admin-code" type="password" placeholder="Админ-код">
+    <button class="btn-primary" id="check-code">Войти</button>
 
-        <input id="new-login" placeholder="Логин">
-        <input id="new-password" placeholder="Пароль">
+    <div id="access-status" class="status-text"></div>
+  </div>
 
-        <select id="new-role">
-          <option value="operator">Оператор</option>
-          <option value="supervisor">Супервайзер</option>
-          <option value="admin">Админ</option>
-        </select>
+  <!-- CREATE USER -->
+  <div id="admin-panel" class="user-card" style="display:none;">
+    <h3>➕ Создать пользователя</h3>
+    <p class="hint">Новый оператор, супервайзер или админ</p>
 
-        <button class="action" id="create-user-btn">Создать</button>
-        <div id="create-user-status"></div>
-      </div>
-    </section>
+    <div class="field">
+      <label>Логин</label>
+      <input id="new-login" placeholder="ivan">
+    </div>
+
+    <div class="field">
+      <label>Пароль</label>
+      <input id="new-password" type="password" placeholder="••••••••">
+    </div>
+
+    <div class="field">
+      <label>Роль</label>
+      <select id="new-role">
+        <option value="operator">Оператор</option>
+        <option value="supervisor">Супервайзер</option>
+        <option value="admin">Админ</option>
+      </select>
+    </div>
+
+    <button class="btn-accent" id="create-user-btn">
+      ➕ Создать пользователя
+    </button>
+
+    <div id="create-user-status" class="status-text"></div>
+  </div>
+</section>
 
   </main>
 </div>
@@ -231,3 +250,4 @@ document.getElementById("create-user-btn").onclick = async () => {
 
 </body>
 </html>
+

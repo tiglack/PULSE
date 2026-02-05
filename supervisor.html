@@ -36,7 +36,21 @@
 <body>
 
 <h1>👑 Админ / Супервайзер панель</h1>
+<h2>➕ Создать пользователя</h2>
 
+<input id="new-login" placeholder="Логин">
+<input id="new-password" placeholder="Пароль">
+
+<select id="new-role">
+  <option value="operator">Оператор</option>
+  <option value="supervisor">Супервайзер</option>
+  <option value="admin">Админ</option>
+</select>
+
+<button id="create-user-btn">Создать</button>
+<div id="create-user-status"></div>
+
+  
 <div id="access-box" class="box">
   <h2>🔐 Код доступа</h2>
   <input id="admin-code" type="password" placeholder="Введите код">
@@ -127,3 +141,4 @@
 
 </body>
 </html>
+

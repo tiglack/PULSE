@@ -378,35 +378,29 @@ function syncShiftEnd() {
   elements.totalCalls.textContent = totalCalls;
 }
   
-  function handleLogin() {
-  const name = elements.operatorInput.value.trim();
-  if (!name) return alert("Введите имя оператора!");
+  async function handleLogin() {
+  const name = elements.operatorInput.value.trim().toUpperCase();
+  if (!name) return alert("Введите имя");
 
-  window.firebaseGet(
+  // 🔐 ПРОВЕРКА РОЛИ
+  const snap = await window.firebaseGet(
     window.firebaseRef(window.firebaseDB, "users/" + name + "/role")
-  ).then(snapshot => {
-    const role = snapshot.val();
+  );
+  const role = snap.val();
 
-    // 👑 АДМИН / СУПЕРВАЙЗЕР
-    if (role === "admin" || role === "supervisor") {
-      localStorage.setItem("pulse_admin_login", name);
-      window.location.href = "supervisor.html";
-      return;
-    }
+  if (role === "admin" || role === "supervisor") {
+    localStorage.setItem("pulse_admin_login", name);
+    window.location.href = "supervisor.html";
+    return; // ⛔ дальше не идём
+  }
 
-    // 👤 ОБЫЧНЫЙ ОПЕРАТОР
-    state.operator = name;
-    elements.operatorName.textContent = name;
-    elements.loginModal.classList.remove('active');
-    elements.app.style.display = 'block';
-
-    saveStateDebounced();
-    renderProjects();
-    updateStatusIndicator();
-    updateChannelButton();
-    elements.startShiftBtn.disabled = state.shiftActive;
-  });
+  // 👇 обычный оператор
+  state.operator = name;
+  elements.operatorName.textContent = name;
+  elements.loginModal.classList.remove("active");
+  elements.app.style.display = "block";
 }
+
   
 
 // ======================
@@ -1238,6 +1232,7 @@ function renderTop3() {
     `;
   });
 }
+
 
 
 

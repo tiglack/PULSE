@@ -172,7 +172,8 @@ const userSnap = await get(ref(db,"users/"+login));
 const me = userSnap.val();
 
 roleInfo.textContent = "Роль: " + me.role;
-
+roleInfo.textContent += " | DEBUG: " + JSON.stringify(me);
+  
 // 🔥 ЖЁСТКАЯ ПРОВЕРКА
 if (me && me.role && me.role.trim() === "admin") {
   usersTab.classList.remove("hidden");

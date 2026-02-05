@@ -138,7 +138,32 @@
     document.getElementById("new-password").value = "";
   };
 </script>
+<script>
+document.getElementById("create-user-btn").onclick = async () => {
+  const login = document.getElementById("new-login").value.trim().toLowerCase();
+  const password = document.getElementById("new-password").value.trim();
+  const role = document.getElementById("new-role").value;
+  const status = document.getElementById("create-user-status");
 
+  if (!login || !password) {
+    status.textContent = "❌ Заполните все поля";
+    return;
+  }
+
+  await window.firebaseSet(
+    window.firebaseRef(window.firebaseDB, "users/" + login),
+    {
+      login,
+      password,
+      role
+    }
+  );
+
+  status.textContent = "✅ Пользователь создан";
+};
+</script>
+  
 </body>
 </html>
+
 

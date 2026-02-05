@@ -150,16 +150,6 @@ button {
   </button>
 </div>
 
-    <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
-  <input id="new-login" placeholder="Логин">
-  <input id="new-password" placeholder="Пароль">
-  <select id="new-role">
-    <option value="operator">operator</option>
-    <option value="supervisor">supervisor</option>
-    <option value="admin">admin</option>
-  </select>
-  <button class="btn-accent" id="create-user-btn">Создать</button>
-</div>
     <table>
       <thead>
         <tr>
@@ -259,19 +249,12 @@ onValue(ref(db,"users"), snap=>{
   });
 });
 }
-
+<script>
 window.deleteUser=async(login)=>{
   if(!confirm("Удалить пользователя "+login+"?"))return;
   await remove(ref(db,"users/"+login));
 };
-</script>
-<script type="module">
-  window.deleteUser = async (login) => {
-    if (!confirm("Удалить пользователя " + login + "?")) return;
-    await remove(ref(db, "users/" + login));
-  };
 
-  // ВОТ СЮДА -->
   const createBtn = document.getElementById("create-user-btn");
 
   if (createBtn) {
@@ -297,6 +280,35 @@ window.deleteUser=async(login)=>{
       alert("Пользователь создан");
     };
   }
+
+  // СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ
+const createBtn = document.getElementById("create-user-btn");
+
+if (createBtn) {
+  createBtn.onclick = async () => {
+    const login = document.getElementById("new-login").value.trim().toLowerCase();
+    const password = document.getElementById("new-password").value.trim();
+    const role = document.getElementById("new-role").value;
+
+    if (!login || !password) {
+      alert("Заполни логин и пароль");
+      return;
+    }
+
+    await update(ref(db, "users/" + login), {
+      login,
+      password,
+      role
+    });
+
+    document.getElementById("new-login").value = "";
+    document.getElementById("new-password").value = "";
+
+    alert("Пользователь создан");
+  };
+}
+
+  
 </script>
 
 

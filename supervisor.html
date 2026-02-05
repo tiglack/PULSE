@@ -114,7 +114,16 @@
     <section id="users" class="page">
   <h1>Users</h1>
 
-  <div id="admin-panel" class="user-card">
+  <!-- 🔐 ПРОВЕРКА АДМИНА -->
+  <div id="access-box" class="auth-card">
+    <h3>🔐 Подтверждение администратора</h3>
+    <input id="admin-code" type="password" placeholder="Админ-код">
+    <button class="btn-primary" id="check-code">Войти</button>
+    <div id="access-status" class="status-text"></div>
+  </div>
+
+  <!-- ➕ СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ -->
+  <div id="admin-panel" class="user-card" style="display:none;">
     <h3>➕ Создать пользователя</h3>
     <p class="hint">Новый оператор, супервайзер или админ</p>
 
@@ -141,11 +150,10 @@
       ➕ Создать пользователя
     </button>
 
-    <div id="create-user-status" class="status-text ok">
-      Пользователь создан
-    </div>
+    <div id="create-user-status" class="status-text"></div>
   </div>
 </section>
+
 
   </main>
 </div>
@@ -240,5 +248,6 @@ document.getElementById("create-user-btn").onclick = async () => {
 
 </body>
 </html>
+
 
 

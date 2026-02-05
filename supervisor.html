@@ -35,6 +35,21 @@
 </head>
 
 <body>
+  <div class="admin-layout">
+  <aside class="sidebar">
+    <h2>PULSE</h2>
+    <button data-page="dashboard">📊 Dashboard</button>
+    <button data-page="operators">👥 Operators</button>
+    <button data-page="users">👤 Users</button>
+  </aside>
+
+  <main class="content">
+    <section id="dashboard" class="page active"></section>
+    <section id="operators" class="page"></section>
+    <section id="users" class="page"></section>
+  </main>
+</div>
+
 
 <h1>👑 Админ панель</h1>
 
@@ -128,4 +143,5 @@ document.getElementById("create-user-btn").onclick = async () => {
 
 </body>
 </html>
+
 

@@ -1,3 +1,70 @@
+// ===== AUTH LOGIN =====
+const loginModal = document.getElementById("login-modal");
+const app = document.getElementById("app");
+
+const loginBtn = document.getElementById("login-button");
+const loginInput = document.getElementById("login-input");
+const passInput = document.getElementById("password-input");
+const errorBox = document.getElementById("login-error");
+
+// если уже залогинен как оператор
+const savedOperator = localStorage.getItem("pulse_operator_login");
+if (savedOperator) {
+  loginModal.classList.remove("active");
+  app.style.display = "block";
+  window.operatorName = savedOperator;
+}
+
+// кнопка ВОЙТИ
+loginBtn.onclick = async () => {
+  errorBox.textContent = "";
+
+  const login = loginInput.value.trim().toLowerCase();
+  const password = passInput.value.trim();
+
+  if (!login || !password) {
+    errorBox.textContent = "Введите логин и пароль";
+    return;
+  }
+
+  const snap = await window.firebaseGet(
+    window.firebaseRef(window.firebaseDB, "users/" + login)
+  );
+
+  if (!snap.exists()) {
+    errorBox.textContent = "Пользователь не найден";
+    return;
+  }
+
+  const user = snap.val();
+
+  if (user.password !== password) {
+    errorBox.textContent = "Неверный пароль";
+    return;
+  }
+
+  // ADMIN / SUPERVISOR
+  if (user.role === "admin" || user.role === "supervisor") {
+    localStorage.setItem("pulse_admin_login", login);
+    location.href = "admin.html";
+    return;
+  }
+
+  // OPERATOR
+  if (user.role === "operator") {
+    localStorage.setItem("pulse_operator_login", login);
+
+    loginModal.classList.remove("active");
+    app.style.display = "block";
+
+    window.operatorName = login;
+    document.getElementById("operator-name").textContent = login;
+    return;
+  }
+
+  errorBox.textContent = "Неизвестная роль";
+};
+
 let allShifts = [];
 document.addEventListener('DOMContentLoaded', function () {
   // ===== OPERATOR STATUS =====
@@ -1253,5 +1320,6 @@ function renderTop3() {
 
 
 });
+
 
 

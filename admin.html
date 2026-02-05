@@ -173,8 +173,11 @@ const me = userSnap.val();
 
 roleInfo.textContent = "Роль: " + me.role;
 
-if (me.role === "admin") {
+// 🔥 ЖЁСТКАЯ ПРОВЕРКА
+if (me && me.role && me.role.trim() === "admin") {
   usersTab.classList.remove("hidden");
+} else {
+  console.warn("Не admin, роль:", me?.role);
 }
 
 // TABS

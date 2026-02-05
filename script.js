@@ -379,27 +379,42 @@ function syncShiftEnd() {
 }
   
   async function handleLogin() {
-  const name = elements.operatorInput.value.trim().toUpperCase();
-  if (!name) return alert("Введите имя");
-
-  // 🔐 ПРОВЕРКА РОЛИ
-  const snap = await window.firebaseGet(
-    window.firebaseRef(window.firebaseDB, "users/" + name + "/role")
-  );
-  const role = snap.val();
-
-  if (role === "admin" || role === "supervisor") {
-    localStorage.setItem("pulse_admin_login", name);
-    window.location.href = "supervisor.html";
-    return; // ⛔ дальше не идём
+  const name = elements.operatorInput.value.trim().toLowerCase();
+  if (!name) {
+    alert("Введите логин");
+    return;
   }
 
-  // 👇 обычный оператор
+  const snap = await window.firebaseGet(
+    window.firebaseRef(window.firebaseDB, "users/" + name)
+  );
+
+  if (!snap.exists()) {
+    alert("❌ Пользователь не найден");
+    return;
+  }
+
+  const user = snap.val();
+
+  // 👑 АДМИН / СУПЕРВАЙЗЕР
+  if (user.role === "admin" || user.role === "supervisor") {
+    localStorage.setItem("pulse_admin_login", name);
+    window.location.href = "supervisor.html";
+    return;
+  }
+
+  // 👤 ОПЕРАТОР
   state.operator = name;
   elements.operatorName.textContent = name;
   elements.loginModal.classList.remove("active");
   elements.app.style.display = "block";
+
+  saveStateDebounced();
+  renderProjects();
+  updateStatusIndicator();
+  updateChannelButton();
 }
+
 
   
 
@@ -1238,3 +1253,4 @@ function renderTop3() {
 
 
 });
+

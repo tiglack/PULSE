@@ -80,7 +80,8 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { getDatabase, ref, get, set, onValue } 
+from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
@@ -105,8 +106,7 @@ if (!adminLogin) location.href = "index.html";
   };
 });
 
-  import { onValue, ref } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
+  
 onValue(ref(db, "operators"), snap => {
   const ops = snap.val() || {};
   let online = 0;
@@ -170,6 +170,7 @@ document.getElementById("create-user-btn").onclick = async () => {
 
 </body>
 </html>
+
 
 
 

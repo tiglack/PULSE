@@ -399,7 +399,7 @@ function syncShiftEnd() {
   // 👑 АДМИН / СУПЕРВАЙЗЕР
   if (user.role === "admin" || user.role === "supervisor") {
     localStorage.setItem("pulse_admin_login", name);
-    window.location.href = "supervisor.html";
+    window.location.href = "admin.html";
     return;
   }
 
@@ -1253,4 +1253,5 @@ function renderTop3() {
 
 
 });
+
 

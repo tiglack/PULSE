@@ -35,6 +35,8 @@
 </head>
 
 <body>
+  <h1>АДМИНКА</h1>
+<div id="stats">Загрузка...</div>
   <div class="admin-layout">
   <aside class="sidebar">
     <h2>PULSE</h2>
@@ -103,6 +105,22 @@ if (!adminLogin) location.href = "index.html";
   };
 });
 
+  import { onValue, ref } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+onValue(ref(db, "operators"), snap => {
+  const ops = snap.val() || {};
+  let online = 0;
+
+  for (let name in ops) {
+    if (Date.now() - (ops[name].lastSeen || 0) < 15000) {
+      online++;
+    }
+  }
+
+  document.getElementById("stats").innerText =
+    "Операторов онлайн: " + online;
+});
+
   
 
 // 🔐 проверка кода
@@ -152,6 +170,7 @@ document.getElementById("create-user-btn").onclick = async () => {
 
 </body>
 </html>
+
 
 
 

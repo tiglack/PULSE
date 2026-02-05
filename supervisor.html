@@ -86,7 +86,8 @@ document.getElementById("check-code").onclick = async () => {
   const input = document.getElementById("admin-code").value;
   const status = document.getElementById("access-status");
 
-  const snap = await get(ref(db, "users/" + adminLogin + "/accessCode"));
+  const snap = await get(ref(db, "users/" + adminLogin + "/password"))
+;
   const real = snap.val();
 
   if (String(input) === String(real)) {
@@ -127,3 +128,4 @@ document.getElementById("create-user-btn").onclick = async () => {
 
 </body>
 </html>
+

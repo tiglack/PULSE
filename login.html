@@ -85,7 +85,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  // 🔥 Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
     authDomain: "pulse-ae670.firebaseapp.com",
@@ -104,14 +103,18 @@
   const btn = document.getElementById("login-btn");
   const errorBox = document.getElementById("error");
 
-  btn.onclick = () => {
-  console.log("CLICK");
+  btn.addEventListener("click", async () => {
+    console.log("CLICK");
 
-  localStorage.setItem("pulse_user", "TEST");
+    errorBox.textContent = "";
 
-  console.log("AFTER SET", localStorage.getItem("pulse_user"));
-};
+    const login = loginInput.value.trim().toLowerCase();
+    const password = passwordInput.value.trim();
 
+    if (!login || !password) {
+      errorBox.textContent = "Введите логин и пароль";
+      return;
+    }
 
     try {
       const snap = await get(ref(db, "users/" + login));
@@ -128,7 +131,7 @@
         return;
       }
 
-      // ✅ ЕДИНЫЙ КЛЮЧ АВТОРИЗАЦИИ
+      // ✅ СОХРАНЯЕМ ПОЛЬЗОВАТЕЛЯ
       localStorage.setItem(
         "pulse_user",
         JSON.stringify({
@@ -137,7 +140,9 @@
         })
       );
 
-      // 👉 редирект по роли
+      console.log("SAVED pulse_user:", localStorage.getItem("pulse_user"));
+
+      // 👉 РЕДИРЕКТ ПО РОЛИ
       if (user.role === "operator") {
         location.href = "index.html";
         return;
@@ -152,12 +157,10 @@
 
     } catch (e) {
       console.error(e);
-      errorBox.textContent = "Ошибка подключения к серверу";
+      errorBox.textContent = "Ошибка подключения";
     }
-  };
+  });
 </script>
 
 </body>
 </html>
-
-

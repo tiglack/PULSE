@@ -128,13 +128,15 @@
     }
 
     // ✅ ЕДИНЫЙ ОБЪЕКТ
-    localStorage.setItem(
-      "pulse_user",
-      JSON.stringify({
-        login: user.login,
-        role: user.role
-      })
-    );
+    // ✅ ЕДИНЫЙ ОБЪЕКТ
+localStorage.setItem(
+  "pulse_user",
+  JSON.stringify({
+    login: login,
+    role: user.role
+  })
+);
+
 
     // 👉 редирект по роли
     if (user.role === "operator") {
@@ -159,5 +161,6 @@
 
 </body>
 </html>
+
 
 

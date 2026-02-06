@@ -101,58 +101,63 @@
   const btn = document.getElementById("login-btn");
   const errorBox = document.getElementById("error");
 
-  btn.onclick = async () => {
-    errorBox.textContent = "";
+ btn.onclick = async () => {
+  errorBox.textContent = "";
 
-    const login = loginInput.value.trim().toLowerCase();
-    const password = passwordInput.value.trim();
+  const login = loginInput.value.trim().toLowerCase();
+  const password = passwordInput.value.trim();
 
-    if (!login || !password) {
-      errorBox.textContent = "Введите логин и пароль";
+  if (!login || !password) {
+    errorBox.textContent = "Введите логин и пароль";
+    return;
+  }
+
+  try {
+    const snap = await get(ref(db, "users/" + login));
+
+    if (!snap.exists()) {
+      errorBox.textContent = "Пользователь не найден";
       return;
     }
 
-    try {
-      const snap = await get(ref(db, "users/" + login));
+    const user = snap.val();
 
-      if (!snap.exists()) {
-        errorBox.textContent = "Пользователь не найден";
-        return;
-      }
+    if (user.password !== password) {
+      errorBox.textContent = "Неверный пароль";
+      return;
+    }
 
-      const user = snap.val();
+    // ✅ ЕДИНЫЙ ОБЪЕКТ
+    localStorage.setItem(
+      "pulse_user",
+      JSON.stringify({
+        login: user.login,
+        role: user.role
+      })
+    );
 
-      if (user.password !== password) {
-        errorBox.textContent = "Неверный пароль";
-        return;
-      }
+    // 👉 редирект по роли
+    if (user.role === "operator") {
+      location.href = "index.html";
+      return;
+    }
 
-      // 👉 РЕДИРЕКТ ПО РОЛИ
-      i// ✅ сохраняем ЕДИНЫЙ объект
-localStorage.setItem(
-  "pulse_user",
-  JSON.stringify({
-    login: user.login,
-    role: user.role
-  })
-);
+    if (user.role === "admin" || user.role === "supervisor") {
+      location.href = "admin.html";
+      return;
+    }
 
-// 👉 редирект по роли
-if (user.role === "operator") {
-  location.href = "index.html";
-  return;
-}
+    errorBox.textContent = "Неизвестная роль";
 
-if (user.role === "admin" || user.role === "supervisor") {
-  location.href = "admin.html";
-  return;
-}
+  } catch (e) {
+    console.error(e);
+    errorBox.textContent = "Ошибка подключения";
+  }
+};
 
-errorBox.textContent = "Неизвестная роль";
-
-  };
 </script>
 
 </body>
 </html>
+
 

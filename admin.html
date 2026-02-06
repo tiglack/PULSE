@@ -135,6 +135,31 @@ input, select {
   </div>
 </div>
 
+  <div class="card">
+  <h2>📊 Статистика за сегодня</h2>
+
+  <div style="display:flex; gap:30px; flex-wrap:wrap; margin-bottom:20px;">
+    <div>
+      <div style="font-size:14px;opacity:.7">Всего звонков</div>
+      <div id="total-calls-today" style="font-size:32px;color:var(--accent)">0</div>
+    </div>
+    <div>
+      <div style="font-size:14px;opacity:.7">Операторов работало</div>
+      <div id="operators-count" style="font-size:32px">0</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Оператор</th>
+        <th>Звонков</th>
+      </tr>
+    </thead>
+    <tbody id="stats-table"></tbody>
+  </table>
+</div>
+
 
   <!-- ОПЕРАТОРЫ -->
   <div id="operators" class="card">
@@ -197,6 +222,60 @@ if (user.role !== "admin" && user.role !== "supervisor") {
 /* ===================== */
 
 /* ⬇️ ТОЛЬКО ПОСЛЕ ЭТОГО ⬇️ */
+  import { onValue, ref } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const statsTable = document.getElementById("stats-table");
+const totalCallsBox = document.getElementById("total-calls-today");
+const operatorsCountBox = document.getElementById("operators-count");
+
+function isToday(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+}
+
+onValue(ref(db, "shifts"), snap => {
+  const data = snap.val();
+  if (!data) return;
+
+  let totalCalls = 0;
+  const perOperator = {};
+
+  Object.values(data).forEach(shift => {
+    if (!shift.startedAt || !isToday(shift.startedAt)) return;
+
+    const calls = Number(shift.calls) || 0;
+    totalCalls += calls;
+
+    if (!perOperator[shift.operator]) {
+      perOperator[shift.operator] = 0;
+    }
+    perOperator[shift.operator] += calls;
+  });
+
+  // 🔢 общие цифры
+  totalCallsBox.textContent = totalCalls;
+  operatorsCountBox.textContent = Object.keys(perOperator).length;
+
+  // 📋 таблица
+  statsTable.innerHTML = "";
+
+  Object.entries(perOperator)
+    .sort((a, b) => b[1] - a[1]) // по убыванию
+    .forEach(([operator, calls]) => {
+      statsTable.innerHTML += `
+        <tr>
+          <td>${operator}</td>
+          <td><b>${calls}</b></td>
+        </tr>
+      `;
+    });
+});
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, get, onValue, update, remove }
 from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";

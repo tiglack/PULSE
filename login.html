@@ -104,12 +104,12 @@
   const errorBox = document.getElementById("error");
 
   btn.addEventListener("click", async () => {
-    console.log("CLICK");
-
     errorBox.textContent = "";
 
     const login = loginInput.value.trim().toLowerCase();
     const password = passwordInput.value.trim();
+
+    console.log("LOGIN TRY:", login, password);
 
     if (!login || !password) {
       errorBox.textContent = "Введите логин и пароль";
@@ -117,7 +117,10 @@
     }
 
     try {
+      // 🔥 БЕРЁМ ПОЛЬЗОВАТЕЛЯ ПО КЛЮЧУ
       const snap = await get(ref(db, "users/" + login));
+
+      console.log("SNAP EXISTS:", snap.exists());
 
       if (!snap.exists()) {
         errorBox.textContent = "Пользователь не найден";
@@ -125,13 +128,15 @@
       }
 
       const user = snap.val();
+      console.log("USER DATA:", user);
 
-      if (user.password !== password) {
+      // ✅ ПРОВЕРЯЕМ ПАРОЛЬ
+      if (String(user.password) !== String(password)) {
         errorBox.textContent = "Неверный пароль";
         return;
       }
 
-      // ✅ СОХРАНЯЕМ ПОЛЬЗОВАТЕЛЯ
+      // ✅ СОХРАНЯЕМ СЕССИЮ
       localStorage.setItem(
         "pulse_user",
         JSON.stringify({
@@ -140,27 +145,29 @@
         })
       );
 
-      console.log("SAVED pulse_user:", localStorage.getItem("pulse_user"));
+      console.log("pulse_user SAVED:", localStorage.getItem("pulse_user"));
 
-      // 👉 РЕДИРЕКТ ПО РОЛИ
+      // 👉 РЕДИРЕКТ
       if (user.role === "operator") {
         location.href = "index.html";
         return;
       }
 
-      if (user.role === "admin" || user.role === "supervisor") {
+      if (user.role === "admin") {
         location.href = "admin.html";
         return;
       }
 
       errorBox.textContent = "Неизвестная роль";
 
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error("LOGIN ERROR:", err);
       errorBox.textContent = "Ошибка подключения";
     }
   });
 </script>
 
+
 </body>
 </html>
+

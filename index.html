@@ -289,42 +289,102 @@
     </div>
   </div>
 
-  <script type="module">
-  import {
-    initializeApp
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+<script type="module">
+/* =======================
+   1️⃣ AUTH GUARD
+======================= */
+let user = null;
 
-  import {
-    getDatabase,
-    ref,
-    set,
-    update,
-    onValue,
-    get
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+try {
+  user = JSON.parse(localStorage.getItem("pulse_user"));
+} catch {
+  localStorage.removeItem("pulse_user");
+  location.href = "login.html";
+  throw new Error("Битая сессия");
+}
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
-    authDomain: "pulse-ae670.firebaseapp.com",
-    databaseURL: "https://pulse-ae670-default-rtdb.firebaseio.com",
-    projectId: "pulse-ae670",
-    storageBucket: "pulse-ae670.firebasestorage.app",
-    messagingSenderId: "353326683454",
-    appId: "1:353326683454:web:34ed86590e53cf60a2c86f"
-  };
+if (!user || !user.login || !user.role) {
+  location.href = "login.html";
+  throw new Error("Не авторизован");
+}
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+// ❌ админам тут делать нечего
+if (user.role !== "operator") {
+  location.href = "admin.html";
+  throw new Error("Нет доступа оператора");
+}
 
-  // 👇👇👇 ВАЖНО
-  window.firebaseDB = db;
-  window.firebaseRef = ref;
-  window.firebaseSet = set;
-  window.firebaseUpdate = update;
-  window.firebaseOnValue = onValue;
-  window.firebaseGet = get;
+// делаем глобально
+window.PULSE_USER = user;
+
+
+/* =======================
+   2️⃣ FIREBASE INIT
+======================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  update,
+  onValue,
+  get
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
+  authDomain: "pulse-ae670.firebaseapp.com",
+  databaseURL: "https://pulse-ae670-default-rtdb.firebaseio.com",
+  projectId: "pulse-ae670",
+  storageBucket: "pulse-ae670.firebasestorage.app",
+  messagingSenderId: "353326683454",
+  appId: "1:353326683454:web:34ed86590e53cf60a2c86f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// глобально для остального кода
+window.firebaseDB = db;
+window.firebaseRef = ref;
+window.firebaseSet = set;
+window.firebaseUpdate = update;
+window.firebaseOnValue = onValue;
+window.firebaseGet = get;
+
+
+/* =======================
+   3️⃣ UI INIT
+======================= */
+document.getElementById("operator-name").textContent = user.login;
+document.getElementById("app").style.display = "block";
+
+
+/* =======================
+   4️⃣ OPERATOR PRESENCE
+======================= */
+const operatorRef = ref(db, "operators/" + user.login);
+
+update(operatorRef, {
+  status: "active",
+  channel: "callback",
+  online: true,
+  lastSeen: Date.now()
+});
+
+window.addEventListener("beforeunload", () => {
+  update(operatorRef, {
+    status: "offline",
+    lastSeen: Date.now()
+  });
+});
+
+
+/* =======================
+   5️⃣ LOAD MAIN SCRIPT
+======================= */
+import "./script.js";
 </script>
 
-  <script src="script.js"></script>
   </body>
 </html>

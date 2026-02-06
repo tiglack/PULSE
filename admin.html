@@ -174,8 +174,16 @@ input, select {
 </div>
 
 <script type="module">
-// ===== AUTH CHECK (FROM login.html) =====
-const user = JSON.parse(localStorage.getItem("pulse_user"));
+/* ===== AUTH GUARD ===== */
+let user = null;
+
+try {
+  user = JSON.parse(localStorage.getItem("pulse_user"));
+} catch {
+  localStorage.removeItem("pulse_user");
+  location.href = "login.html";
+  throw new Error("Битая сессия");
+}
 
 if (!user || !user.login || !user.role) {
   location.href = "login.html";
@@ -186,8 +194,9 @@ if (user.role !== "admin" && user.role !== "supervisor") {
   location.href = "login.html";
   throw new Error("Нет доступа");
 }
-// =======================================
+/* ===================== */
 
+/* ⬇️ ТОЛЬКО ПОСЛЕ ЭТОГО ⬇️ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, get, onValue, update, remove }
 from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";

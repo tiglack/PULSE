@@ -1,12 +1,26 @@
+// ===== AUTH VIA pulse_user =====
+let user;
 
-// ===== OPERATOR AUTH CHECK =====
-const operatorLogin = localStorage.getItem("pulse_operator_login");
-
-if (!operatorLogin) {
+try {
+  user = JSON.parse(localStorage.getItem("pulse_user"));
+} catch {
+  localStorage.clear();
   location.href = "login.html";
-  throw new Error("Не авторизован оператор");
+  throw new Error("Битая сессия");
 }
-// =============================== 
+
+if (!user || !user.login || !user.role) {
+  location.href = "login.html";
+  throw new Error("Не авторизован");
+}
+
+if (user.role !== "operator") {
+  location.href = "admin.html";
+  throw new Error("Нет доступа оператора");
+}
+
+const operatorLogin = user.login;
+// ===============================
 
 
 let allShifts = [];
@@ -1234,6 +1248,7 @@ function renderTop3() {
 
 
 });
+
 
 
 

@@ -61,6 +61,7 @@
       margin-top: 12px;
       color: #e74c3c;
       font-size: 14px;
+      min-height: 18px;
     }
   </style>
 </head>
@@ -70,8 +71,8 @@
 <div class="login-box">
   <h2>🔐 Вход в Pulse</h2>
 
-  <input id="login" placeholder="Логин">
-  <input id="password" type="password" placeholder="Пароль">
+  <input id="login" placeholder="Логин" autocomplete="username">
+  <input id="password" type="password" placeholder="Пароль" autocomplete="current-password">
 
   <button id="login-btn">Войти</button>
 
@@ -82,7 +83,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  // 🔥 Firebase config (ТОТ ЖЕ, что у тебя)
+  // 🔥 Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
     authDomain: "pulse-ae670.firebaseapp.com",
@@ -101,69 +102,60 @@
   const btn = document.getElementById("login-btn");
   const errorBox = document.getElementById("error");
 
- btn.onclick = async () => {
-  errorBox.textContent = "";
+  btn.onclick = async () => {
+    errorBox.textContent = "";
 
-  const login = loginInput.value.trim().toLowerCase();
-  const password = passwordInput.value.trim();
+    const login = loginInput.value.trim().toLowerCase();
+    const password = passwordInput.value.trim();
 
-  if (!login || !password) {
-    errorBox.textContent = "Введите логин и пароль";
-    return;
-  }
-
-  try {
-    const snap = await get(ref(db, "users/" + login));
-
-    if (!snap.exists()) {
-      errorBox.textContent = "Пользователь не найден";
+    if (!login || !password) {
+      errorBox.textContent = "Введите логин и пароль";
       return;
     }
 
-    const user = snap.val();
+    try {
+      const snap = await get(ref(db, "users/" + login));
 
-    if (user.password !== password) {
-      errorBox.textContent = "Неверный пароль";
-      return;
+      if (!snap.exists()) {
+        errorBox.textContent = "Пользователь не найден";
+        return;
+      }
+
+      const user = snap.val();
+
+      if (user.password !== password) {
+        errorBox.textContent = "Неверный пароль";
+        return;
+      }
+
+      // ✅ ЕДИНЫЙ КЛЮЧ АВТОРИЗАЦИИ
+      localStorage.setItem(
+        "pulse_user",
+        JSON.stringify({
+          login: login,
+          role: user.role
+        })
+      );
+
+      // 👉 редирект по роли
+      if (user.role === "operator") {
+        location.href = "index.html";
+        return;
+      }
+
+      if (user.role === "admin" || user.role === "supervisor") {
+        location.href = "admin.html";
+        return;
+      }
+
+      errorBox.textContent = "Неизвестная роль";
+
+    } catch (e) {
+      console.error(e);
+      errorBox.textContent = "Ошибка подключения к серверу";
     }
-
-    // ✅ ЕДИНЫЙ ОБЪЕКТ
-    // ✅ ЕДИНЫЙ ОБЪЕКТ
-    console.log("LOGIN OK", login, user.role);
-
-localStorage.setItem(
-  "pulse_user",
-  JSON.stringify({
-    login: login,
-    role: user.role
-  })
-);
-
-
-    // 👉 редирект по роли
-    if (user.role === "operator") {
-      location.href = "index.html";
-      return;
-    }
-
-    if (user.role === "admin" || user.role === "supervisor") {
-      location.href = "admin.html";
-      return;
-    }
-
-    errorBox.textContent = "Неизвестная роль";
-
-  } catch (e) {
-    console.error(e);
-    errorBox.textContent = "Ошибка подключения";
-  }
-};
-
+  };
 </script>
 
 </body>
 </html>
-
-
-
-

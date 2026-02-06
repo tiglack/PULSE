@@ -137,28 +137,31 @@
       }
 
       // ✅ СОХРАНЯЕМ СЕССИЮ
-      localStorage.setItem(
-        "pulse_user",
-        JSON.stringify({
-          login: login,
-          role: user.role
-        })
-      );
+      // ✅ СОХРАНЯЕМ СЕССИЮ (ИСПРАВЛЕНО)
+localStorage.setItem(
+  "pulse_user",
+  JSON.stringify({
+    login: login,
+    role: String(user.role).trim().toLowerCase()
+  })
+);
 
-      console.log("pulse_user SAVED:", localStorage.getItem("pulse_user"));
+console.log("pulse_user SAVED:", localStorage.getItem("pulse_user"));
 
-      // 👉 РЕДИРЕКТ
-      if (user.role === "operator") {
-        location.href = "index.html";
-        return;
-      }
+// 👉 РЕДИРЕКТ ПО РОЛИ
+const role = String(user.role).trim().toLowerCase();
 
-      if (user.role === "admin") {
-        location.href = "admin.html";
-        return;
-      }
+if (role === "operator") {
+  location.href = "index.html";
+  return;
+}
 
-      errorBox.textContent = "Неизвестная роль";
+if (role === "admin" || role === "supervisor") {
+  location.href = "admin.html";
+  return;
+}
+
+errorBox.textContent = "Неизвестная роль";
 
     } catch (err) {
       console.error("LOGIN ERROR:", err);
@@ -170,4 +173,5 @@
 
 </body>
 </html>
+
 

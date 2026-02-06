@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pulse — Вход</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Segoe UI, sans-serif;
+      color: #f0f0f0;
+    }
+
+    .login-box {
+      background: rgba(20, 20, 20, 0.95);
+      padding: 40px;
+      border-radius: 16px;
+      width: 320px;
+      box-shadow: 0 0 30px rgba(0,0,0,.6);
+      border: 1px solid rgba(212,175,55,.3);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 25px;
+      color: #d4af37;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      background: #d4af37;
+      color: #111;
+    }
+
+    button:hover {
+      background: #ffd700;
+    }
+
+    .error {
+      margin-top: 12px;
+      color: #e74c3c;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="login-box">
+  <h2>🔐 Вход в Pulse</h2>
+
+  <input id="login" placeholder="Логин">
+  <input id="password" type="password" placeholder="Пароль">
+
+  <button id="login-btn">Войти</button>
+
+  <div id="error" class="error"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  // 🔥 Firebase config (ТОТ ЖЕ, что у тебя)
+  const firebaseConfig = {
+    apiKey: "AIzaSyARCnSBWkN_2xUFKGlmDBTWV_OIf1-P3pY",
+    authDomain: "pulse-ae670.firebaseapp.com",
+    databaseURL: "https://pulse-ae670-default-rtdb.firebaseio.com",
+    projectId: "pulse-ae670",
+    storageBucket: "pulse-ae670.firebasestorage.app",
+    messagingSenderId: "353326683454",
+    appId: "1:353326683454:web:34ed86590e53cf60a2c86f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const loginInput = document.getElementById("login");
+  const passwordInput = document.getElementById("password");
+  const btn = document.getElementById("login-btn");
+  const errorBox = document.getElementById("error");
+
+  btn.onclick = async () => {
+    errorBox.textContent = "";
+
+    const login = loginInput.value.trim().toLowerCase();
+    const password = passwordInput.value.trim();
+
+    if (!login || !password) {
+      errorBox.textContent = "Введите логин и пароль";
+      return;
+    }
+
+    try {
+      const snap = await get(ref(db, "users/" + login));
+
+      if (!snap.exists()) {
+        errorBox.textContent = "Пользователь не найден";
+        return;
+      }
+
+      const user = snap.val();
+
+      if (user.password !== password) {
+        errorBox.textContent = "Неверный пароль";
+        return;
+      }
+
+      // 👉 РЕДИРЕКТ ПО РОЛИ
+      if (user.role === "operator") {
+        localStorage.setItem("pulse_operator_login", login);
+        localStorage.removeItem("pulse_admin_login");
+        location.href = "index.html";
+        return;
+      }
+
+      if (user.role === "admin" || user.role === "supervisor") {
+        localStorage.setItem("pulse_admin_login", login);
+        localStorage.removeItem("pulse_operator_login");
+        location.href = "admin.html";
+        return;
+      }
+
+      errorBox.textContent = "Неизвестная роль";
+
+    } catch (e) {
+      console.error(e);
+      errorBox.textContent = "Ошибка подключения";
+    }
+  };
+</script>
+
+</body>
+</html>

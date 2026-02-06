@@ -1,69 +1,13 @@
-// ===== AUTH LOGIN =====
-const loginModal = document.getElementById("login-modal");
-const app = document.getElementById("app");
 
-const loginBtn = document.getElementById("login-button");
-const loginInput = document.getElementById("login-input");
-const passInput = document.getElementById("password-input");
-const errorBox = document.getElementById("login-error");
+// ===== OPERATOR AUTH CHECK =====
+const operatorLogin = localStorage.getItem("pulse_operator_login");
 
-// если уже залогинен как оператор
-const savedOperator = localStorage.getItem("pulse_operator_login");
-if (savedOperator) {
-  loginModal.classList.remove("active");
-  app.style.display = "block";
-  window.operatorName = savedOperator;
+if (!operatorLogin) {
+  location.href = "login.html";
+  throw new Error("Не авторизован оператор");
 }
+// =============================== 
 
-// кнопка ВОЙТИ
-loginBtn.onclick = async () => {
-  errorBox.textContent = "";
-
-  const login = loginInput.value.trim().toLowerCase();
-  const password = passInput.value.trim();
-
-  if (!login || !password) {
-    errorBox.textContent = "Введите логин и пароль";
-    return;
-  }
-
-  const snap = await window.firebaseGet(
-    window.firebaseRef(window.firebaseDB, "users/" + login)
-  );
-
-  if (!snap.exists()) {
-    errorBox.textContent = "Пользователь не найден";
-    return;
-  }
-
-  const user = snap.val();
-
-  if (user.password !== password) {
-    errorBox.textContent = "Неверный пароль";
-    return;
-  }
-
-  // ADMIN / SUPERVISOR
-  if (user.role === "admin" || user.role === "supervisor") {
-    localStorage.setItem("pulse_admin_login", login);
-    location.href = "admin.html";
-    return;
-  }
-
-  // OPERATOR
-  if (user.role === "operator") {
-    localStorage.setItem("pulse_operator_login", login);
-
-    loginModal.classList.remove("active");
-    app.style.display = "block";
-
-    window.operatorName = login;
-    document.getElementById("operator-name").textContent = login;
-    return;
-  }
-
-  errorBox.textContent = "Неизвестная роль";
-};
 
 let allShifts = [];
 document.addEventListener('DOMContentLoaded', function () {
@@ -84,9 +28,6 @@ function syncOperatorStatus(status) {
 // ===== END OPERATOR STATUS =====
 
   const elements = {
-    loginModal: document.getElementById('login-modal'),
-    loginButton: document.getElementById('login-button'),
-    operatorInput: document.getElementById('operator-name-input'),
     app: document.getElementById('app'),
     operatorName: document.getElementById('operator-name'),
     projectsContainer: document.getElementById('projects-container'),
@@ -157,35 +98,35 @@ function syncOperatorStatus(status) {
   }
 
   const state = {
-    operator: null,
-    shiftActive: false,
-    shiftStartTime: 0,
-    shiftElapsed: 0,
-    shiftPaused: false,
-    pauseStartTime: 0,
-    pauseElapsed: 0,
-    pauseTotalElapsed: 0,
-    currentCall: null,
-    callStartTime: 0,
-    callElapsed: 0,
-    channel: 'Call Back',
-    channels: ['Call Back', 'Hot Line'],
-    projects: [],
-    mainTimer: null,
-    editingProject: null,
-    lastUpdate: 0,
-    pendingChannelChange: null,
-    background: {
-      type: 'gradient',
-      value: 'gradient1',
-      customImage: null
-    },
-    stats: {
-      totalCalls: 0,
-      avgCallDuration: 0,
-      efficiency: 0
-    }
-  };
+  operator: null,
+  shiftActive: false,
+  shiftStartTime: 0,
+  shiftElapsed: 0,
+  shiftPaused: false,
+  pauseStartTime: 0,
+  pauseElapsed: 0,
+  pauseTotalElapsed: 0,
+  currentCall: null,
+  callStartTime: 0,
+  callElapsed: 0,
+  channel: 'Call Back',
+  channels: ['Call Back', 'Hot Line'],
+  projects: [],
+  mainTimer: null,
+  editingProject: null,
+  lastUpdate: 0,
+  pendingChannelChange: null,
+  background: {
+    type: 'gradient',
+    value: 'gradient1',
+    customImage: null
+  },
+  stats: {
+    totalCalls: 0,
+    avgCallDuration: 0,
+    efficiency: 0
+  }
+};
 
   // ===== FIREBASE =====
 function getShiftId() {
@@ -445,73 +386,34 @@ function syncShiftEnd() {
   elements.totalCalls.textContent = totalCalls;
 }
   
-  async function handleLogin() {
-  const name = elements.operatorInput.value.trim().toLowerCase();
-  if (!name) {
-    alert("Введите логин");
-    return;
-  }
 
-  const snap = await window.firebaseGet(
-    window.firebaseRef(window.firebaseDB, "users/" + name)
-  );
 
-  if (!snap.exists()) {
-    alert("❌ Пользователь не найден");
-    return;
-  }
+// ======================
 
-  const user = snap.val();
+// ======================
 
-  // 👑 АДМИН / СУПЕРВАЙЗЕР
-  if (user.role === "admin" || user.role === "supervisor") {
-    localStorage.setItem("pulse_admin_login", name);
-    window.location.href = "admin.html";
-    return;
-  }
 
-  // 👤 ОПЕРАТОР
-  state.operator = name;
-  elements.operatorName.textContent = name;
-  elements.loginModal.classList.remove("active");
-  elements.app.style.display = "block";
+	function startShift() {
+  state.shiftActive = true;
+  state.shiftStartTime = Date.now();
+  state.shiftElapsed = 0;
+  state.pauseTotalElapsed = 0;
+  state.pauseElapsed = 0;
+  state.shiftPaused = false;
+
+  startMainTimer();
+  elements.startShiftBtn.disabled = true;
 
   saveStateDebounced();
   renderProjects();
   updateStatusIndicator();
-  updateChannelButton();
+
+  syncShiftStart();
+  resetNotesForNewShift();
+  initPersonalNotesPerShift();
+  syncOperatorStatus("active");
 }
 
-
-  
-
-// ======================
-
-// ======================
-
-
-
-  function startShift() {
-    if (!state.operator) {
-      alert("Сначала введите имя оператора!");
-      return;
-    }
-    state.shiftActive = true;
-    state.shiftStartTime = Date.now();
-    state.shiftElapsed = 0;
-    state.pauseTotalElapsed = 0;
-    state.pauseElapsed = 0;
-    state.shiftPaused = false;
-    startMainTimer();
-    elements.startShiftBtn.disabled = true;
-    saveStateDebounced();
-    renderProjects();
-    updateStatusIndicator();
-    syncShiftStart();
-    resetNotesForNewShift();
-    initPersonalNotesPerShift();
-    syncOperatorStatus("active");
-  }
 
   function pauseShift() {
     if (!state.shiftActive || state.shiftPaused) return;
@@ -605,10 +507,10 @@ function syncShiftEnd() {
   }
 
   function confirmEndShift() {
-    elements.confirmEndShiftModal.classList.remove('active');
-    endShift();
-    endShift()
-  }
+  elements.confirmEndShiftModal.classList.remove('active');
+  endShift();
+}
+
 
   function cancelEndShift() {
     elements.confirmEndShiftModal.classList.remove('active');
@@ -769,15 +671,11 @@ function syncShiftEnd() {
   }
 
   function closeReport() {
-    elements.reportModal.classList.remove('active');
-    resetShiftData();
-    state.operator = null;
-    elements.operatorInput.value = '';
-    elements.loginModal.classList.add('active');
-    elements.app.style.display = 'none';
-    saveStateDebounced();
-  }
+  elements.reportModal.classList.remove('active');
+  resetShiftData();
+}
 
+	
   function openEditCallsModal(projectName) {
     const project = state.projects.find(p => p.name === projectName);
     if (project) {
@@ -1086,8 +984,30 @@ function syncShiftEnd() {
   }
 
   function init() {
-    loadState();
-    initPersonalNotesPerShift();
+
+  // ✅ 1. СНАЧАЛА проверяем и чистим старый state
+  const saved = localStorage.getItem('gedjifero_state');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      if (data.operator && data.operator !== operatorLogin) {
+        localStorage.removeItem('gedjifero_state');
+      }
+    } catch {}
+  }
+
+  // ✅ 2. ТОЛЬКО ПОТОМ загружаем state
+  loadState();
+
+  // ✅ 3. Устанавливаем текущего оператора
+  state.operator = operatorLogin;
+  elements.operatorName.textContent = operatorLogin;
+
+  // ✅ 4. Показываем приложение
+  elements.app.style.display = 'block';
+
+  // дальше всё как у тебя
+  initPersonalNotesPerShift();
 
     
     // Загрузка темы
@@ -1096,7 +1016,6 @@ function syncShiftEnd() {
     elements.themeToggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
     
     // Обработчики событий
-    elements.loginButton.addEventListener('click', handleLogin);
     elements.startShiftBtn.addEventListener('click', startShift);
     elements.endShiftBtn.addEventListener('click', showEndShiftConfirmation);
     elements.pauseShiftBtn.addEventListener('click', pauseShift);
@@ -1180,12 +1099,11 @@ function syncShiftEnd() {
         deleteProject(index);
       }
     });
+	  
 
     // Восстановление состояния при загрузке
     if (state.operator) {
       elements.operatorName.textContent = state.operator;
-      elements.loginModal.classList.remove('active');
-      elements.app.style.display = 'block';
       elements.startShiftBtn.disabled = state.shiftActive;
       updateChannelButton();
       
@@ -1209,12 +1127,7 @@ function syncShiftEnd() {
       }
     });
 
-    // Enter для входа
-    elements.operatorInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') handleLogin();
-    });
-
-    // Настройка горячих клавиш и уведомлений
+        // Настройка горячих клавиш и уведомлений
     setupHotkeys();
     requestNotificationPermission();
   }
@@ -1262,17 +1175,18 @@ function initPersonalNotesPerShift() {
 
 
 function resetNotesForNewShift() {
-  localStorage.removeItem("pulse_current_shift_notes");
+  localStorage.removeItem("pulse_current_shift_notes") ;
   const textarea = document.getElementById("personal-notes");
   if (textarea) textarea.value = "";
 }
 // ===== END PERSONAL NOTES =====
-
+ 
 
   // Глобальные функции
   window.updateProjectName = updateProjectName;
 
   init();
+	
 
   // ===== FIREBASE LISTENER (TOP 3) =====
 window.firebaseOnValue(
@@ -1320,6 +1234,7 @@ function renderTop3() {
 
 
 });
+
 
 
 

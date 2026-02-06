@@ -94,40 +94,6 @@ input, select {
 </head>
 
 <body>
-<!-- 🔐 ADMIN LOGIN -->
-<div id="admin-login-modal" style="
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.7);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-">
-  <div style="
-    background:#111;
-    padding:30px;
-    border-radius:16px;
-    width:320px;
-    text-align:center;
-    border:1px solid rgba(255,255,255,.1);
-  ">
-    <h2 style="color:#d4af37;margin-bottom:20px;">🔐 Вход в админку</h2>
-
-    <input id="admin-login" placeholder="Логин"
-      style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;">
-    <input id="admin-password" type="password" placeholder="Пароль"
-      style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;">
-
-    <button id="admin-login-btn"
-      style="width:100%;padding:10px;border:none;border-radius:8px;background:#d4af37;font-weight:700;">
-      Войти
-    </button>
-
-    <div id="admin-login-error" style="margin-top:10px;color:#e74c3c;"></div>
-  </div>
-</div>
-
 <header>
   <h1>👑 Pulse Admin</h1>
   <div id="role-info"></div>
@@ -208,6 +174,20 @@ input, select {
 </div>
 
 <script type="module">
+// ===== AUTH CHECK (FROM login.html) =====
+const user = JSON.parse(localStorage.getItem("pulse_user"));
+
+if (!user || !user.login || !user.role) {
+  location.href = "login.html";
+  throw new Error("Не авторизован");
+}
+
+if (user.role !== "admin" && user.role !== "supervisor") {
+  location.href = "login.html";
+  throw new Error("Нет доступа");
+}
+// =======================================
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, get, onValue, update, remove }
 from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
@@ -224,69 +204,17 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-// ===== ADMIN LOGIN CHECK =====
-const loginModal = document.getElementById("admin-login-modal");
-const loginBtn = document.getElementById("admin-login-btn");
-const loginInput = document.getElementById("admin-login");
-const passInput = document.getElementById("admin-password");
-const errorBox = document.getElementById("admin-login-error");
-
-// если уже вошёл — не показываем логин
-const savedAdmin = localStorage.getItem("pulse_admin_login");
-if (savedAdmin) {
-  loginModal.style.display = "none";
-}
-
-loginBtn.onclick = async () => {
-  errorBox.textContent = "";
-
-  const login = loginInput.value.trim().toLowerCase();
-  const password = passInput.value.trim();
-
-  if (!login || !password) {
-    errorBox.textContent = "Введите логин и пароль";
-    return;
-  }
-
-  const snap = await get(ref(db, "users/" + login));
-  if (!snap.exists()) {
-    errorBox.textContent = "Пользователь не найден";
-    return;
-  }
-
-  const user = snap.val();
-
-  if (user.password !== password) {
-    errorBox.textContent = "Неверный пароль";
-    return;
-  }
-
-  if (user.role !== "admin" && user.role !== "supervisor") {
-    errorBox.textContent = "Нет доступа";
-    return;
-  }
-
-  // успех
-  localStorage.setItem("pulse_admin_login", login);
-  loginModal.style.display = "none";
-
-  // можно сохранить роль
-  window.currentAdminRole = user.role;
-};
 
 
 const roleInfo = document.getElementById("role-info");
 const usersTab = document.getElementById("users-tab");
-const login = localStorage.getItem("pulse_admin_login");
-if (!login) {
-  throw new Error("Не авторизован");
-}
 
-  const snap = await get(ref(db,"users/"+login));
-  const me = snap.val();
+
+  const me = user;
+
 
 roleInfo.textContent = "Роль: " + me.role;
-
+  
 if (me.role === "admin") {
   usersTab.classList.remove("hidden");
 }

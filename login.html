@@ -128,28 +128,31 @@
       }
 
       // 👉 РЕДИРЕКТ ПО РОЛИ
-      if (user.role === "operator") {
-        localStorage.setItem("pulse_operator_login", login);
-        localStorage.removeItem("pulse_admin_login");
-        location.href = "index.html";
-        return;
-      }
+      i// ✅ сохраняем ЕДИНЫЙ объект
+localStorage.setItem(
+  "pulse_user",
+  JSON.stringify({
+    login: user.login,
+    role: user.role
+  })
+);
 
-      if (user.role === "admin" || user.role === "supervisor") {
-        localStorage.setItem("pulse_admin_login", login);
-        localStorage.removeItem("pulse_operator_login");
-        location.href = "admin.html";
-        return;
-      }
+// 👉 редирект по роли
+if (user.role === "operator") {
+  location.href = "index.html";
+  return;
+}
 
-      errorBox.textContent = "Неизвестная роль";
+if (user.role === "admin" || user.role === "supervisor") {
+  location.href = "admin.html";
+  return;
+}
 
-    } catch (e) {
-      console.error(e);
-      errorBox.textContent = "Ошибка подключения";
-    }
+errorBox.textContent = "Неизвестная роль";
+
   };
 </script>
 
 </body>
 </html>
+
